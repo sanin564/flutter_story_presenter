@@ -232,6 +232,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   void _startStoryCountdown() {
     _currentVideoPlayer?.addListener(videoListener);
     if (_currentVideoPlayer != null) {
+      _animationController?.duration = _currentVideoPlayer?.value.duration;
       return;
     }
 
@@ -287,6 +288,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   void videoListener() {
     final dur = _currentVideoPlayer?.value.duration.inMilliseconds;
     final pos = _currentVideoPlayer?.value.position.inMilliseconds;
+
+    _animationController?.duration = _currentVideoPlayer?.value.duration;
 
     if (pos == dur) {
       _playNext();
@@ -360,9 +363,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         currentIndex != (widget.items.length - 1)) {
       /// Dispose the video player only in case of multiple story
       isCurrentItemLoaded = false;
-      setState(() {
-
-      });
+      setState(() {});
       _currentVideoPlayer?.removeListener(videoListener);
       _currentVideoPlayer?.dispose();
       _currentVideoPlayer = null;
@@ -392,6 +393,16 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   /// Plays the previous story item.
   void _playPrevious() {
+    if (currentIndex == 0) {
+      _resetAnimation();
+      _startStoryCountdown();
+      if (mounted) {
+        setState(() {});
+      }
+      widget.onPreviousCompleted?.call();
+      return;
+    }
+
     if (_audioPlayer != null) {
       _audioPlayer?.dispose();
       _audioDurationSubscriptionStream?.cancel();
@@ -401,16 +412,6 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       _currentVideoPlayer?.removeListener(videoListener);
       _currentVideoPlayer?.dispose();
       _currentVideoPlayer = null;
-    }
-
-    if (currentIndex == 0) {
-      _resetAnimation();
-      _startStoryCountdown();
-      if (mounted) {
-        setState(() {});
-      }
-      widget.onPreviousCompleted?.call();
-      return;
     }
 
     _resetAnimation();
@@ -445,13 +446,11 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
               onLoaded: () {
                 isCurrentItemLoaded = true;
                 _startStoryCountdown();
-
               },
               onAudioLoaded: (audioPlayer) {
                 isCurrentItemLoaded = true;
                 _audioPlayer = audioPlayer;
                 _startStoryCountdown();
-
               },
             ),
           ),
