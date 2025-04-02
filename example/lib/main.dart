@@ -94,59 +94,6 @@ class _HomeState extends State<Home> {
               width: double.infinity,
               loadingWidget: Center(child: CupertinoActivityIndicator()),
             )),
-        StoryItem(
-          storyItemType: StoryItemType.custom,
-          duration: const Duration(seconds: 20),
-          customWidget: (p0, audioPlayer) => PostOverlayView(
-            controller: p0,
-          ),
-          imageConfig: StoryViewImageConfig(
-            fit: BoxFit.contain,
-            progressIndicatorBuilder: (p0, p1, p2) => const Center(
-              child: CupertinoActivityIndicator(),
-            ),
-          ),
-        ),
-      ],
-    ),
-    StoryModel(
-      userName: 'Lakhan P.',
-      userProfile: 'https://devkrest.com/team/lakhan.png',
-      stories: [
-        StoryItem(
-          storyItemType: StoryItemType.custom,
-          duration: const Duration(seconds: 20),
-          customWidget: (p0, audioPlayer) => PostOverlayView(
-            controller: p0,
-          ),
-          imageConfig: StoryViewImageConfig(
-            fit: BoxFit.contain,
-            progressIndicatorBuilder: (p0, p1, p2) => const Center(
-              child: CupertinoActivityIndicator(),
-            ),
-          ),
-        ),
-        StoryItem(
-          storyItemType: StoryItemType.video,
-          storyItemSource: StoryItemSource.asset,
-          url: 'assets/StorySaver.net-_spindia_-Video-1718781607686.mp4',
-          thumbnail: const Center(
-              child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CupertinoActivityIndicator(
-                radius: 15,
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Text('Video Loading')
-            ],
-          )),
-          videoConfig: const StoryViewVideoConfig(
-            fit: BoxFit.contain,
-          ),
-        ),
       ],
     ),
     StoryModel(
@@ -300,7 +247,6 @@ class _MyStoryViewState extends State<MyStoryView> {
     return FlutterStoryPresenter(
       flutterStoryController: controller,
       items: widget.storyModel.stories,
-      footerWidget: MessageBoxView(controller: controller),
       storyViewIndicatorConfig: storyViewIndicatorConfig,
       initialIndex: 0,
       headerWidget: ProfileView(storyModel: widget.storyModel),
@@ -324,73 +270,6 @@ class _MyStoryViewState extends State<MyStoryView> {
             curve: Curves.decelerate);
         controller = FlutterStoryController();
       },
-    );
-  }
-}
-
-class MessageBoxView extends StatelessWidget {
-  const MessageBoxView({
-    super.key,
-    required this.controller,
-  });
-
-  final FlutterStoryController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 20).copyWith(bottom: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.white,
-                  ),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: TextFormField(
-                  onTap: () {
-                    controller.pause();
-                  },
-                  onTapOutside: (event) {
-                    controller.play();
-                    FocusScope.of(context).unfocus();
-                  },
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                  ),
-                  decoration: const InputDecoration(
-                      hintText: 'Enter Message',
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 6)),
-                ),
-              ),
-            ),
-            const SizedBox(
-              width: 5,
-            ),
-            IconButton(
-                onPressed: () {},
-                iconSize: 30,
-                icon: Transform.rotate(
-                    angle: -0.6,
-                    child: const Padding(
-                      padding: EdgeInsets.only(bottom: 9),
-                      child: Icon(
-                        Icons.send,
-                        color: Colors.white,
-                      ),
-                    )))
-          ],
-        ),
-      ),
     );
   }
 }
