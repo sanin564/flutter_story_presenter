@@ -29,6 +29,7 @@ typedef OnSlideDown = void Function(DragUpdateDetails);
 typedef OnSlideStart = void Function(DragStartDetails);
 typedef OnPause = Future<bool> Function();
 typedef OnResume = Future<bool> Function();
+typedef IndicatorWrapper = Widget Function(Widget child);
 
 class FlutterStoryPresenter extends StatefulWidget {
   const FlutterStoryPresenter({
@@ -49,6 +50,7 @@ class FlutterStoryPresenter extends StatefulWidget {
     this.onSlideStart,
     this.onPause,
     this.onResume,
+    this.indicatorWrapper,
     super.key,
   }) : assert(initialIndex < items.length);
 
@@ -116,6 +118,8 @@ class FlutterStoryPresenter extends StatefulWidget {
   /// It must return a boolean future with true if this child will handle the request;
   /// otherwise, return a boolean future with false.
   final OnResume? onResume;
+
+  final IndicatorWrapper? indicatorWrapper;
 
   @override
   State<FlutterStoryPresenter> createState() => _FlutterStoryPresenterState();
@@ -548,45 +552,54 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             ),
           ),
         },
-        Align(
-          alignment: storyViewIndicatorConfig.alignment,
-          child: Padding(
-            padding: storyViewIndicatorConfig.margin,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _currentVideoPlayer != null
-                    ? SmoothVideoProgress(
-                        controller: _currentVideoPlayer!,
-                        builder: (context, progress, duration, child) {
-                          return StoryViewIndicator(
-                            currentIndex: currentIndex,
-                            currentItemAnimatedValue: progress.inMilliseconds /
-                                duration.inMilliseconds,
-                            totalItems: widget.items.length,
-                            storyViewIndicatorConfig: storyViewIndicatorConfig,
-                          );
-                        })
-                    : _animationController != null
-                        ? AnimatedBuilder(
-                            animation: _animationController!,
-                            builder: (context, child) => StoryViewIndicator(
-                              currentIndex: currentIndex,
-                              currentItemAnimatedValue: currentItemProgress,
-                              totalItems: widget.items.length,
-                              storyViewIndicatorConfig:
-                                  storyViewIndicatorConfig,
-                            ),
-                          )
-                        : StoryViewIndicator(
-                            currentIndex: currentIndex,
-                            currentItemAnimatedValue: currentItemProgress,
-                            totalItems: widget.items.length,
-                            storyViewIndicatorConfig: storyViewIndicatorConfig,
-                          ),
-              ],
-            ),
-          ),
+        Builder(
+          builder: (context) {
+            final child = Align(
+              alignment: storyViewIndicatorConfig.alignment,
+              child: Padding(
+                padding: storyViewIndicatorConfig.margin,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _currentVideoPlayer != null
+                        ? SmoothVideoProgress(
+                            controller: _currentVideoPlayer!,
+                            builder: (context, progress, duration, child) {
+                              return StoryViewIndicator(
+                                currentIndex: currentIndex,
+                                currentItemAnimatedValue:
+                                    progress.inMilliseconds /
+                                        duration.inMilliseconds,
+                                totalItems: widget.items.length,
+                                storyViewIndicatorConfig:
+                                    storyViewIndicatorConfig,
+                              );
+                            })
+                        : _animationController != null
+                            ? AnimatedBuilder(
+                                animation: _animationController!,
+                                builder: (context, child) => StoryViewIndicator(
+                                  currentIndex: currentIndex,
+                                  currentItemAnimatedValue: currentItemProgress,
+                                  totalItems: widget.items.length,
+                                  storyViewIndicatorConfig:
+                                      storyViewIndicatorConfig,
+                                ),
+                              )
+                            : StoryViewIndicator(
+                                currentIndex: currentIndex,
+                                currentItemAnimatedValue: currentItemProgress,
+                                totalItems: widget.items.length,
+                                storyViewIndicatorConfig:
+                                    storyViewIndicatorConfig,
+                              ),
+                  ],
+                ),
+              ),
+            );
+
+            return widget.indicatorWrapper?.call(child) ?? child;
+          },
         ),
         Align(
           alignment: Alignment.centerLeft,
