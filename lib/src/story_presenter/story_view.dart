@@ -27,6 +27,8 @@ typedef OnAudioLoaded = void Function(AudioPlayer);
 typedef CustomViewBuilder = Widget Function(AudioPlayer);
 typedef OnSlideDown = void Function(DragUpdateDetails);
 typedef OnSlideStart = void Function(DragStartDetails);
+typedef OnPause = Future<bool> Function();
+typedef OnResume = Future<bool> Function();
 
 class FlutterStoryPresenter extends StatefulWidget {
   const FlutterStoryPresenter({
@@ -45,6 +47,8 @@ class FlutterStoryPresenter extends StatefulWidget {
     this.footerWidget,
     this.onSlideDown,
     this.onSlideStart,
+    this.onPause,
+    this.onResume,
     super.key,
   }) : assert(initialIndex < items.length);
 
@@ -98,6 +102,20 @@ class FlutterStoryPresenter extends StatefulWidget {
 
   /// Widget to display text field or other content at the bottom of the screen.
   final Widget? footerWidget;
+
+  /// called when status is paused by user, typically when user tap and holds
+  /// on the screen.
+  ///
+  /// It must return a boolean future with true if this child will handle the request;
+  /// otherwise, return a boolean future with false.
+  final OnPause? onPause;
+
+  /// called when status is resumed after user paused the view, typically when
+  /// user releases the tap from a long press.
+  ///
+  /// It must return a boolean future with true if this child will handle the request;
+  /// otherwise, return a boolean future with false.
+  final OnResume? onResume;
 
   @override
   State<FlutterStoryPresenter> createState() => _FlutterStoryPresenterState();
@@ -603,10 +621,22 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             height: size.height,
             child: GestureDetector(
               key: ValueKey('$currentIndex'),
-              onLongPressDown: (details) => _pauseMedia(),
-              onLongPressUp: _resumeMedia,
-              onLongPressEnd: (details) => _resumeMedia(),
-              onLongPressCancel: _resumeMedia,
+              onLongPressDown: (details) async {
+                final willUserHandle = await widget.onPause?.call() ?? false;
+                if (!willUserHandle) _pauseMedia();
+              },
+              onLongPressUp: () async {
+                final willUserHandle = await widget.onResume?.call() ?? false;
+                if (!willUserHandle) _resumeMedia();
+              },
+              onLongPressEnd: (details) async {
+                final willUserHandle = await widget.onResume?.call() ?? false;
+                if (!willUserHandle) _resumeMedia();
+              },
+              onLongPressCancel: () async {
+                final willUserHandle = await widget.onResume?.call() ?? false;
+                if (!willUserHandle) _resumeMedia();
+              },
               onVerticalDragStart: widget.onSlideStart?.call,
               onVerticalDragUpdate: widget.onSlideDown?.call,
             ),

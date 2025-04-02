@@ -252,7 +252,7 @@ class _MyStoryViewState extends State<MyStoryView> {
       headerWidget: ProfileView(storyModel: widget.storyModel),
       onLeftTap: () async {
         /// do some work here
-        return true;
+        return false;
       },
       onRightTap: () async {
         /// do some work here
