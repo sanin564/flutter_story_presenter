@@ -18,8 +18,8 @@ import 'package:video_player/video_player.dart';
 
 typedef OnStoryChanged = void Function(int);
 typedef OnCompleted = Future<void> Function();
-typedef OnLeftTap = void Function();
-typedef OnRightTap = void Function();
+typedef OnLeftTap = Future<bool> Function();
+typedef OnRightTap = Future<bool> Function();
 typedef OnDrag = void Function();
 typedef OnItemBuild = Widget? Function(int, Widget);
 typedef OnVideoLoad = void Function(VideoPlayerController?);
@@ -64,9 +64,15 @@ class FlutterStoryPresenter extends StatefulWidget {
   final OnCompleted? onPreviousCompleted;
 
   /// Callback function triggered when the user taps on the left half of the screen.
+  ///
+  /// It must return a boolean future with true if this child will handle the request;
+  /// otherwise, return a boolean future with false.
   final OnLeftTap? onLeftTap;
 
   /// Callback function triggered when the user taps on the right half of the screen.
+  ///
+  /// It must return a boolean future with true if this child will handle the request;
+  /// otherwise, return a boolean future with false.
   final OnRightTap? onRightTap;
 
   /// Callback function triggered when user drag downs the storyview.
@@ -570,7 +576,10 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             width: size.width * .2,
             height: size.height,
             child: GestureDetector(
-              onTap: _playPrevious,
+              onTap: () async {
+                final willUserHandle = await widget.onLeftTap?.call() ?? false;
+                if (!willUserHandle) _playPrevious();
+              },
             ),
           ),
         ),
@@ -580,7 +589,10 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             width: size.width * .2,
             height: size.height,
             child: GestureDetector(
-              onTap: _playNext,
+              onTap: () async {
+                final willUserHandle = await widget.onRightTap?.call() ?? false;
+                if (!willUserHandle) _playNext();
+              },
             ),
           ),
         ),

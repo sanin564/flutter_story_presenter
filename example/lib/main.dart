@@ -52,22 +52,21 @@ class _HomeState extends State<Home> {
           url: 'assets/fb8512a35d6f4b2e8917b74a048de71a.MP4',
           thumbnail: const Center(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CupertinoActivityIndicator(
-                    radius: 15,
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text('Video Loading')
-                ],
-              )),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CupertinoActivityIndicator(
+                radius: 15,
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Text('Video Loading')
+            ],
+          )),
           videoConfig: const StoryViewVideoConfig(
             fit: BoxFit.cover,
           ),
         ),
-
         StoryItem(
           storyItemType: StoryItemType.custom,
           audioConfig: StoryViewAudioConfig(
@@ -85,7 +84,6 @@ class _HomeState extends State<Home> {
           url:
               "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800",
         ),
-
         StoryItem(
             storyItemType: StoryItemType.video,
             url:
@@ -306,6 +304,14 @@ class _MyStoryViewState extends State<MyStoryView> {
       storyViewIndicatorConfig: storyViewIndicatorConfig,
       initialIndex: 0,
       headerWidget: ProfileView(storyModel: widget.storyModel),
+      onLeftTap: () async {
+        /// do some work here
+        return true;
+      },
+      onRightTap: () async {
+        /// do some work here
+        return false;
+      },
       onStoryChanged: (p0) {},
       onPreviousCompleted: () async {
         await widget.pageController.previousPage(
