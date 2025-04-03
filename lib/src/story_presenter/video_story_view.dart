@@ -10,6 +10,14 @@ import '../utils/video_utils.dart';
 /// A widget that displays a video story view, supporting different video sources
 /// (network, file, asset) and optional thumbnail and error widgets.
 class VideoStoryView extends StatefulWidget {
+  /// Creates a [VideoStoryView] widget.
+  const VideoStoryView({
+    required this.storyItem,
+    this.onVideoLoad,
+    this.looping,
+    super.key,
+  });
+
   /// The story item containing video data and configuration.
   final StoryItem storyItem;
 
@@ -18,10 +26,6 @@ class VideoStoryView extends StatefulWidget {
 
   /// In case of single video story
   final bool? looping;
-
-  /// Creates a [VideoStoryView] widget.
-  const VideoStoryView(
-      {required this.storyItem, this.onVideoLoad, this.looping, super.key});
 
   @override
   State<VideoStoryView> createState() => _VideoStoryViewState();

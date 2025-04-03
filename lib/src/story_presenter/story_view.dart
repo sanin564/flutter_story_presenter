@@ -451,7 +451,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final mdSize = MediaQuery.sizeOf(context);
     return Stack(
       children: [
         if (currentItem.thumbnail != null) ...{
@@ -602,8 +602,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         Align(
           alignment: Alignment.centerLeft,
           child: SizedBox(
-            width: size.width * .2,
-            height: size.height,
+            width: mdSize.width * .2,
+            height: mdSize.height,
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onLeftTap?.call() ?? false;
@@ -615,8 +615,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         Align(
           alignment: Alignment.centerRight,
           child: SizedBox(
-            width: size.width * .8,
-            height: size.height,
+            width: mdSize.width * .8,
+            height: mdSize.height,
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onRightTap?.call() ?? false;
@@ -628,8 +628,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         Align(
           alignment: Alignment.centerRight,
           child: SizedBox(
-            width: size.width,
-            height: size.height,
+            width: mdSize.width,
+            height: mdSize.height,
             child: GestureDetector(
               key: ValueKey('$currentIndex'),
               onLongPressDown: (details) async {
@@ -657,9 +657,10 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
           Align(
             alignment: Alignment.topCenter,
             child: SafeArea(
-                bottom: storyViewIndicatorConfig.enableBottomSafeArea,
-                top: storyViewIndicatorConfig.enableTopSafeArea,
-                child: widget.headerWidget!),
+              bottom: storyViewIndicatorConfig.enableBottomSafeArea,
+              top: storyViewIndicatorConfig.enableTopSafeArea,
+              child: widget.headerWidget!,
+            ),
           ),
         },
         if (widget.footerWidget != null) ...{

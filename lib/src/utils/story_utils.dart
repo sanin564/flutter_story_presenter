@@ -1,13 +1,31 @@
 import '../controller/flutter_story_controller.dart';
 
 /// To Perform Action on Story with [FlutterStoryController]
-enum StoryAction { play, pause, next, previous, mute, unMute, playCustomWidget }
+enum StoryAction {
+  play,
+  pause,
+  next,
+  previous,
+  mute,
+  unMute,
+  playCustomWidget,
+}
 
 /// Story Item Type to Display
-enum StoryItemType { image, video, text, web, custom }
+enum StoryItemType {
+  image,
+  video,
+  text,
+  web,
+  custom,
+}
 
 /// Story Item Source to Display Widgets from Asset/Network
-enum StoryItemSource { asset, network, file }
+enum StoryItemSource {
+  asset,
+  network,
+  file,
+}
 
 extension StoryActionExtensions on StoryAction {
   bool get isPlay => this == StoryAction.play;
