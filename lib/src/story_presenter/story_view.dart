@@ -202,6 +202,12 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     }
   }
 
+  void _forwardAnimation({double? from}) {
+    if (_animationController?.duration != null) {
+      _animationController!.forward(from: from);
+    }
+  }
+
   /// Returns the current story item.
   StoryItem get currentItem => widget.items[currentIndex];
 
@@ -216,9 +222,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       _audioPlayer?.play();
       _currentVideoPlayer?.play();
       if (_currentProgressAnimation != null) {
-        _animationController?.forward(
-          from: _currentProgressAnimation?.value,
-        );
+        _forwardAnimation(from: _currentProgressAnimation!.value);
       }
     }
 
@@ -339,7 +343,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   /// Resets the animation controller and its listeners.
   void _resetAnimation() {
     _animationController?.reset();
-    _animationController?.forward();
+    _forwardAnimation();
     _animationController
       ?..removeListener(animationListener)
       ..removeStatusListener(animationStatusListener);
@@ -347,9 +351,14 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   /// Starts the countdown for the story item duration.
   void _startStoryCountdown() {
-    _currentVideoPlayer?.addListener(videoListener);
-    if (_currentVideoPlayer != null) {
-      _animationController?.duration = _currentVideoPlayer?.value.duration;
+    if (currentItem.storyItemType.isVideo) {
+      if (_currentVideoPlayer != null) {
+        _animationController ??= AnimationController(
+          vsync: this,
+        );
+        _animationController?.duration = _currentVideoPlayer!.value.duration;
+        _currentVideoPlayer!.addListener(videoListener);
+      }
       return;
     }
 
@@ -367,7 +376,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
               ..addListener(animationListener)
               ..addStatusListener(animationStatusListener);
 
-        _animationController!.forward();
+        _forwardAnimation();
       });
       _audioDurationSubscriptionStream =
           _audioPlayer?.positionStream.listen(audioPositionListener);
@@ -390,34 +399,35 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       vsync: this,
     );
 
-    _animationController?.duration =
-        _currentVideoPlayer?.value.duration ?? currentItem.duration;
+    _animationController?.duration = currentItem.duration;
 
     _currentProgressAnimation =
         Tween<double>(begin: 0, end: 1).animate(_animationController!)
           ..addListener(animationListener)
           ..addStatusListener(animationStatusListener);
 
-    _animationController!.forward();
+    _forwardAnimation();
   }
 
   /// Listener for the video player's state changes.
   void videoListener() {
-    final dur = _currentVideoPlayer?.value.duration.inMilliseconds;
-    final pos = _currentVideoPlayer?.value.position.inMilliseconds;
+    if (_currentVideoPlayer != null) {
+      final dur = _currentVideoPlayer!.value.duration.inMilliseconds;
+      final pos = _currentVideoPlayer!.value.position.inMilliseconds;
 
-    if (pos == dur) {
-      _controller.next();
-      return;
-    }
+      if (pos == dur) {
+        _controller.next();
+        return;
+      }
 
-    if (_currentVideoPlayer?.value.isBuffering ?? false) {
-      _animationController?.stop(canceled: false);
-    }
+      if (_currentVideoPlayer!.value.isBuffering) {
+        _animationController?.stop(canceled: false);
+      }
 
-    if (_currentVideoPlayer?.value.isPlaying ?? false) {
-      if (_currentProgressAnimation != null) {
-        _animationController?.forward(from: _currentProgressAnimation?.value);
+      if (_currentVideoPlayer!.value.isPlaying) {
+        if (_currentProgressAnimation != null) {
+          _forwardAnimation(from: _currentProgressAnimation?.value);
+        }
       }
     }
   }
