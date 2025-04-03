@@ -617,7 +617,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         Align(
           alignment: Alignment.centerRight,
           child: SizedBox(
-            width: size.width * .2,
+            width: size.width * .8,
             height: size.height,
             child: GestureDetector(
               onTap: () async {
