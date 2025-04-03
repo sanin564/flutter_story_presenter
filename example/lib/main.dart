@@ -138,6 +138,20 @@ class _HomeState extends State<Home> {
         ),
       ],
     ),
+    StoryModel(
+      userName: 'Kaival Patel',
+      userProfile: 'https://avatars.githubusercontent.com/u/39383435?v=4',
+      stories: [
+        StoryItem(
+          storyItemType: StoryItemType.text,
+          url: 'Hello World',
+        ),
+        StoryItem(
+          storyItemType: StoryItemType.text,
+          url: 'How Are you Guyzz doingg?',
+        )
+      ],
+    ),
   ];
 
   @override
