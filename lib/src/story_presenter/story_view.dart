@@ -139,8 +139,13 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   StreamSubscription? _audioDurationSubscriptionStream;
   StreamSubscription? _audioPlayerStateStream;
 
+  late final FlutterStoryController _controller;
+
   @override
   void initState() {
+    super.initState();
+    _initStoryController();
+
     if (_animationController != null) {
       _animationController?.reset();
       _animationController?.dispose();
@@ -150,12 +155,15 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       vsync: this,
     );
     currentIndex = widget.initialIndex;
-    widget.flutterStoryController?.addListener(_storyControllerListener);
+
     _startStoryView();
 
     WidgetsBinding.instance.addObserver(this);
+  }
 
-    super.initState();
+  void _initStoryController() {
+    _controller = widget.flutterStoryController ?? FlutterStoryController();
+    _controller.addListener(_storyControllerListener);
   }
 
   @override
@@ -163,12 +171,12 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     log("STATE ==> $state");
     switch (state) {
       case AppLifecycleState.resumed:
-        _resumeMedia();
+        _controller.play();
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
       case AppLifecycleState.hidden:
-        _pauseMedia();
+        _controller.pause();
         break;
       case AppLifecycleState.detached:
         break;
@@ -177,14 +185,20 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   @override
   void dispose() {
+    _disposeStoryController();
     _animationController?.dispose();
     _animationController = null;
-    widget.flutterStoryController
-      ?..removeListener(_storyControllerListener)
-      ..dispose();
+
     _audioDurationSubscriptionStream?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _disposeStoryController() {
+    _controller.removeListener(_storyControllerListener);
+    if (widget.flutterStoryController == null) {
+      _controller.dispose();
+    }
   }
 
   /// Returns the current story item.
@@ -196,29 +210,37 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   /// Listener for the story controller to handle various story actions.
   void _storyControllerListener() {
-    final controller = widget.flutterStoryController;
-    final storyStatus = controller?.storyStatus;
-    final jumpIndex = controller?.jumpIndex;
+    final storyStatus = _controller.storyStatus;
+    final jumpIndex = _controller.jumpIndex;
 
-    if (storyStatus != null) {
-      if (storyStatus.isPlay) {
+    switch (storyStatus) {
+      case StoryAction.play:
         _resumeMedia();
-      } else if (storyStatus.isMute || storyStatus.isUnMute) {
-        _toggleMuteUnMuteMedia();
-      } else if (storyStatus.isPause) {
+        break;
+
+      case StoryAction.pause:
         _pauseMedia();
-      } else if (storyStatus.isPrevious) {
-        _playPrevious();
-      } else if (storyStatus.isNext) {
+        break;
+
+      case StoryAction.next:
         _playNext();
-      }
+        break;
+
+      case StoryAction.previous:
+        _playPrevious();
+        break;
+
+      case StoryAction.mute:
+      case StoryAction.unMute:
+        _toggleMuteUnMuteMedia();
+        break;
     }
 
     if (jumpIndex != null &&
         jumpIndex >= 0 &&
         jumpIndex < widget.items.length) {
       currentIndex = jumpIndex - 1;
-      _playNext();
+      _controller.next();
     }
   }
 
@@ -286,9 +308,9 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         (event) {
           if (event.playing) {
             if (event.processingState == ProcessingState.loading) {
-              _pauseMedia();
+              _controller.pause();
             } else {
-              _resumeMedia();
+              _controller.play();
             }
           }
         },
@@ -318,7 +340,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     final pos = _currentVideoPlayer?.value.position.inMilliseconds;
 
     if (pos == dur) {
-      _playNext();
+      _controller.next();
       return;
     }
 
@@ -338,7 +360,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     final pos = _totalAudioDuration?.inMilliseconds;
 
     if (pos == dur) {
-      _playNext();
+      _controller.next();
       return;
     }
   }
@@ -351,7 +373,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   /// Listener for the animation status.
   void animationStatusListener(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
-      _playNext();
+      _controller.next();
     }
   }
 
@@ -451,7 +473,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final mdSize = MediaQuery.sizeOf(context);
     return Stack(
       children: [
         if (currentItem.thumbnail != null) ...{
@@ -602,12 +624,12 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         Align(
           alignment: Alignment.centerLeft,
           child: SizedBox(
-            width: size.width * .2,
-            height: size.height,
+            width: mdSize.width * .2,
+            height: mdSize.height,
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onLeftTap?.call() ?? false;
-                if (!willUserHandle) _playPrevious();
+                if (!willUserHandle) _controller.previous();
               },
             ),
           ),
@@ -615,12 +637,12 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         Align(
           alignment: Alignment.centerRight,
           child: SizedBox(
-            width: size.width * .8,
-            height: size.height,
+            width: mdSize.width * .8,
+            height: mdSize.height,
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onRightTap?.call() ?? false;
-                if (!willUserHandle) _playNext();
+                if (!willUserHandle) _controller.next();
               },
             ),
           ),
@@ -628,25 +650,25 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         Align(
           alignment: Alignment.centerRight,
           child: SizedBox(
-            width: size.width,
-            height: size.height,
+            width: mdSize.width,
+            height: mdSize.height,
             child: GestureDetector(
               key: ValueKey('$currentIndex'),
               onLongPressDown: (details) async {
                 final willUserHandle = await widget.onPause?.call() ?? false;
-                if (!willUserHandle) _pauseMedia();
+                if (!willUserHandle) _controller.pause();
               },
               onLongPressUp: () async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _resumeMedia();
+                if (!willUserHandle) _controller.play();
               },
               onLongPressEnd: (details) async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _resumeMedia();
+                if (!willUserHandle) _controller.play();
               },
               onLongPressCancel: () async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _resumeMedia();
+                if (!willUserHandle) _controller.play();
               },
               onVerticalDragStart: widget.onSlideStart?.call,
               onVerticalDragUpdate: widget.onSlideDown?.call,
@@ -657,9 +679,10 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
           Align(
             alignment: Alignment.topCenter,
             child: SafeArea(
-                bottom: storyViewIndicatorConfig.enableBottomSafeArea,
-                top: storyViewIndicatorConfig.enableTopSafeArea,
-                child: widget.headerWidget!),
+              bottom: storyViewIndicatorConfig.enableBottomSafeArea,
+              top: storyViewIndicatorConfig.enableTopSafeArea,
+              child: widget.headerWidget!,
+            ),
           ),
         },
         if (widget.footerWidget != null) ...{

@@ -5,11 +5,12 @@ import 'package:just_audio/just_audio.dart';
 typedef OnTextStoryLoaded = void Function(bool);
 
 class TextStoryView extends StatefulWidget {
-  const TextStoryView(
-      {required this.storyItem,
-      this.onTextStoryLoaded,
-      this.onAudioLoaded,
-      super.key});
+  const TextStoryView({
+    super.key,
+    required this.storyItem,
+    this.onTextStoryLoaded,
+    this.onAudioLoaded,
+  });
 
   final StoryItem storyItem;
   final OnTextStoryLoaded? onTextStoryLoaded;
