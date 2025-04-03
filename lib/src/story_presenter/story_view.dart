@@ -124,6 +124,7 @@ class FlutterStoryPresenter extends StatefulWidget {
 class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   AnimationController? _animationController;
+
   Animation? _currentProgressAnimation;
   int currentIndex = 0;
   bool isCurrentItemLoaded = false;
@@ -140,18 +141,15 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   @override
   void initState() {
     super.initState();
-    _initStoryController();
 
-    if (_animationController != null) {
-      _animationController?.reset();
-      _animationController?.dispose();
-      _animationController = null;
-    }
+    _initStoryController();
+    _disposeAnimeController();
+
     _animationController = AnimationController(
       vsync: this,
     );
-    currentIndex = widget.initialIndex;
 
+    currentIndex = widget.initialIndex;
     widget.onStoryChanged?.call(currentIndex);
 
     WidgetsBinding.instance.addObserver(this);
@@ -182,8 +180,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   @override
   void dispose() {
     _disposeStoryController();
-    _animationController?.dispose();
-    _animationController = null;
+    _disposeAnimeController();
 
     _audioDurationSubscriptionStream?.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -194,6 +191,14 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     _controller.removeListener(_storyControllerListener);
     if (widget.flutterStoryController == null) {
       _controller.dispose();
+    }
+  }
+
+  void _disposeAnimeController() {
+    if (_animationController != null) {
+      _animationController!.reset();
+      _animationController!.dispose();
+      _animationController = null;
     }
   }
 
