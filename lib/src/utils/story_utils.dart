@@ -8,7 +8,6 @@ enum StoryAction {
   previous,
   mute,
   unMute,
-  playCustomWidget,
 }
 
 /// Story Item Type to Display
@@ -25,22 +24,6 @@ enum StoryItemSource {
   asset,
   network,
   file,
-}
-
-extension StoryActionExtensions on StoryAction {
-  bool get isPlay => this == StoryAction.play;
-
-  bool get isPause => this == StoryAction.pause;
-
-  bool get isNext => this == StoryAction.next;
-
-  bool get isPrevious => this == StoryAction.previous;
-
-  bool get isMute => this == StoryAction.mute;
-
-  bool get isUnMute => this == StoryAction.unMute;
-
-  bool get isPlayCustomWidget => this == StoryAction.playCustomWidget;
 }
 
 extension StoryItemTypeExtensions on StoryItemType {

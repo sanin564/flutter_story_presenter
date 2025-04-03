@@ -141,6 +141,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   @override
   void initState() {
+    super.initState();
+
     if (_animationController != null) {
       _animationController?.reset();
       _animationController?.dispose();
@@ -154,8 +156,6 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     _startStoryView();
 
     WidgetsBinding.instance.addObserver(this);
-
-    super.initState();
   }
 
   @override
@@ -200,18 +200,24 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     final storyStatus = controller?.storyStatus;
     final jumpIndex = controller?.jumpIndex;
 
-    if (storyStatus != null) {
-      if (storyStatus.isPlay) {
-        _resumeMedia();
-      } else if (storyStatus.isMute || storyStatus.isUnMute) {
-        _toggleMuteUnMuteMedia();
-      } else if (storyStatus.isPause) {
-        _pauseMedia();
-      } else if (storyStatus.isPrevious) {
-        _playPrevious();
-      } else if (storyStatus.isNext) {
-        _playNext();
-      }
+    switch (storyStatus) {
+      case StoryAction.play:
+        return _resumeMedia();
+
+      case StoryAction.pause:
+        return _pauseMedia();
+
+      case StoryAction.next:
+        return _playNext();
+
+      case StoryAction.previous:
+        return _playPrevious();
+
+      case StoryAction.mute:
+      case StoryAction.unMute:
+        return _toggleMuteUnMuteMedia();
+      case null:
+        break;
     }
 
     if (jumpIndex != null &&
