@@ -211,29 +211,120 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   /// Listener for the story controller to handle various story actions.
   void _storyControllerListener() {
+    /// Resumes the media playback.
+    void resumeMedia() {
+      _audioPlayer?.play();
+      _currentVideoPlayer?.play();
+      if (_currentProgressAnimation != null) {
+        _animationController?.forward(
+          from: _currentProgressAnimation?.value,
+        );
+      }
+    }
+
+    /// Pauses the media playback.
+    void pauseMedia() {
+      _audioPlayer?.pause();
+      _currentVideoPlayer?.pause();
+      _animationController?.stop(canceled: false);
+    }
+
+    /// Plays the next story item.
+    void playNext() async {
+      if (_currentVideoPlayer != null &&
+          currentIndex != (widget.items.length - 1)) {
+        /// Dispose the video player only in case of multiple story
+        isCurrentItemLoaded = false;
+        setState(() {});
+        _currentVideoPlayer?.removeListener(videoListener);
+        _currentVideoPlayer?.dispose();
+        _currentVideoPlayer = null;
+      }
+
+      if (currentIndex == widget.items.length - 1) {
+        await widget.onCompleted?.call();
+        if (mounted) {
+          setState(() {});
+        }
+        return;
+      }
+
+      currentIndex = currentIndex + 1;
+      _resetAnimation();
+      widget.onStoryChanged?.call(currentIndex);
+      isCurrentItemLoaded = false;
+      if (mounted) {
+        setState(() {});
+      }
+    }
+
+    /// Plays the previous story item.
+    void playPrevious() {
+      if (_audioPlayer != null) {
+        _audioPlayer?.dispose();
+        _audioDurationSubscriptionStream?.cancel();
+        _audioPlayerStateStream?.cancel();
+      }
+      if (_currentVideoPlayer != null) {
+        _currentVideoPlayer?.removeListener(videoListener);
+        _currentVideoPlayer?.dispose();
+        _currentVideoPlayer = null;
+      }
+
+      if (currentIndex == 0) {
+        _resetAnimation();
+        _startStoryCountdown();
+        if (mounted) {
+          setState(() {});
+        }
+        widget.onPreviousCompleted?.call();
+        return;
+      }
+
+      _resetAnimation();
+      currentIndex = currentIndex - 1;
+      widget.onStoryChanged?.call(currentIndex);
+      isCurrentItemLoaded = false;
+      if (mounted) {
+        setState(() {});
+      }
+    }
+
+    /// Toggles mute/unmute for the media.
+    void toggleMuteUnMuteMedia() {
+      if (_currentVideoPlayer != null) {
+        final videoPlayerValue = _currentVideoPlayer!.value;
+        if (videoPlayerValue.volume == 1) {
+          _currentVideoPlayer!.setVolume(0);
+        } else {
+          _currentVideoPlayer!.setVolume(1);
+        }
+      }
+    }
+
     final storyStatus = _controller.storyStatus;
     final jumpIndex = _controller.jumpIndex;
 
     switch (storyStatus) {
       case StoryAction.play:
-        _resumeMedia();
+        resumeMedia();
         break;
 
       case StoryAction.pause:
-        _pauseMedia();
+        pauseMedia();
         break;
 
       case StoryAction.next:
-        _playNext();
+        playNext();
         break;
 
       case StoryAction.previous:
-        _playPrevious();
+        playPrevious();
         break;
 
       case StoryAction.mute:
       case StoryAction.unMute:
-        _toggleMuteUnMuteMedia();
+        toggleMuteUnMuteMedia();
         break;
     }
 
@@ -252,17 +343,6 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     _animationController
       ?..removeListener(animationListener)
       ..removeStatusListener(animationStatusListener);
-  }
-
-  /// Resumes the media playback.
-  void _resumeMedia() {
-    _audioPlayer?.play();
-    _currentVideoPlayer?.play();
-    if (_currentProgressAnimation != null) {
-      _animationController?.forward(
-        from: _currentProgressAnimation?.value,
-      );
-    }
   }
 
   /// Starts the countdown for the story item duration.
@@ -361,86 +441,6 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   void animationStatusListener(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
       _controller.next();
-    }
-  }
-
-  /// Pauses the media playback.
-  void _pauseMedia() {
-    _audioPlayer?.pause();
-    _currentVideoPlayer?.pause();
-    _animationController?.stop(canceled: false);
-  }
-
-  /// Toggles mute/unmute for the media.
-  void _toggleMuteUnMuteMedia() {
-    if (_currentVideoPlayer != null) {
-      final videoPlayerValue = _currentVideoPlayer!.value;
-      if (videoPlayerValue.volume == 1) {
-        _currentVideoPlayer!.setVolume(0);
-      } else {
-        _currentVideoPlayer!.setVolume(1);
-      }
-    }
-  }
-
-  /// Plays the next story item.
-  void _playNext() async {
-    if (_currentVideoPlayer != null &&
-        currentIndex != (widget.items.length - 1)) {
-      /// Dispose the video player only in case of multiple story
-      isCurrentItemLoaded = false;
-      setState(() {});
-      _currentVideoPlayer?.removeListener(videoListener);
-      _currentVideoPlayer?.dispose();
-      _currentVideoPlayer = null;
-    }
-
-    if (currentIndex == widget.items.length - 1) {
-      await widget.onCompleted?.call();
-      if (mounted) {
-        setState(() {});
-      }
-      return;
-    }
-
-    currentIndex = currentIndex + 1;
-    _resetAnimation();
-    widget.onStoryChanged?.call(currentIndex);
-    isCurrentItemLoaded = false;
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  /// Plays the previous story item.
-  void _playPrevious() {
-    if (_audioPlayer != null) {
-      _audioPlayer?.dispose();
-      _audioDurationSubscriptionStream?.cancel();
-      _audioPlayerStateStream?.cancel();
-    }
-    if (_currentVideoPlayer != null) {
-      _currentVideoPlayer?.removeListener(videoListener);
-      _currentVideoPlayer?.dispose();
-      _currentVideoPlayer = null;
-    }
-
-    if (currentIndex == 0) {
-      _resetAnimation();
-      _startStoryCountdown();
-      if (mounted) {
-        setState(() {});
-      }
-      widget.onPreviousCompleted?.call();
-      return;
-    }
-
-    _resetAnimation();
-    currentIndex = currentIndex - 1;
-    widget.onStoryChanged?.call(currentIndex);
-    isCurrentItemLoaded = false;
-    if (mounted) {
-      setState(() {});
     }
   }
 
