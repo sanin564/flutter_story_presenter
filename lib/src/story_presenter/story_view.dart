@@ -171,12 +171,12 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     log("STATE ==> $state");
     switch (state) {
       case AppLifecycleState.resumed:
-        _resumeMedia();
+        _controller.play();
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
       case AppLifecycleState.hidden:
-        _pauseMedia();
+        _controller.pause();
         break;
       case AppLifecycleState.detached:
         break;
@@ -240,7 +240,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         jumpIndex >= 0 &&
         jumpIndex < widget.items.length) {
       currentIndex = jumpIndex - 1;
-      _playNext();
+      _controller.next();
     }
   }
 
@@ -308,9 +308,9 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         (event) {
           if (event.playing) {
             if (event.processingState == ProcessingState.loading) {
-              _pauseMedia();
+              _controller.pause();
             } else {
-              _resumeMedia();
+              _controller.play();
             }
           }
         },
@@ -340,7 +340,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     final pos = _currentVideoPlayer?.value.position.inMilliseconds;
 
     if (pos == dur) {
-      _playNext();
+      _controller.next();
       return;
     }
 
@@ -360,7 +360,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     final pos = _totalAudioDuration?.inMilliseconds;
 
     if (pos == dur) {
-      _playNext();
+      _controller.next();
       return;
     }
   }
@@ -373,7 +373,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   /// Listener for the animation status.
   void animationStatusListener(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
-      _playNext();
+      _controller.next();
     }
   }
 
@@ -629,7 +629,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onLeftTap?.call() ?? false;
-                if (!willUserHandle) _playPrevious();
+                if (!willUserHandle) _controller.previous();
               },
             ),
           ),
@@ -642,7 +642,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onRightTap?.call() ?? false;
-                if (!willUserHandle) _playNext();
+                if (!willUserHandle) _controller.next();
               },
             ),
           ),
@@ -656,19 +656,19 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
               key: ValueKey('$currentIndex'),
               onLongPressDown: (details) async {
                 final willUserHandle = await widget.onPause?.call() ?? false;
-                if (!willUserHandle) _pauseMedia();
+                if (!willUserHandle) _controller.pause();
               },
               onLongPressUp: () async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _resumeMedia();
+                if (!willUserHandle) _controller.play();
               },
               onLongPressEnd: (details) async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _resumeMedia();
+                if (!willUserHandle) _controller.play();
               },
               onLongPressCancel: () async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _resumeMedia();
+                if (!willUserHandle) _controller.play();
               },
               onVerticalDragStart: widget.onSlideStart?.call,
               onVerticalDragUpdate: widget.onSlideDown?.call,
