@@ -139,9 +139,12 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   StreamSubscription? _audioDurationSubscriptionStream;
   StreamSubscription? _audioPlayerStateStream;
 
+  late final FlutterStoryController _controller;
+
   @override
   void initState() {
     super.initState();
+    _initStoryController();
 
     if (_animationController != null) {
       _animationController?.reset();
@@ -152,10 +155,15 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       vsync: this,
     );
     currentIndex = widget.initialIndex;
-    widget.flutterStoryController?.addListener(_storyControllerListener);
+
     _startStoryView();
 
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  void _initStoryController() {
+    _controller = widget.flutterStoryController ?? FlutterStoryController();
+    _controller.addListener(_storyControllerListener);
   }
 
   @override
@@ -177,14 +185,20 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   @override
   void dispose() {
+    _disposeStoryController();
     _animationController?.dispose();
     _animationController = null;
-    widget.flutterStoryController
-      ?..removeListener(_storyControllerListener)
-      ..dispose();
+
     _audioDurationSubscriptionStream?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _disposeStoryController() {
+    _controller.removeListener(_storyControllerListener);
+    if (widget.flutterStoryController == null) {
+      _controller.dispose();
+    }
   }
 
   /// Returns the current story item.
@@ -196,27 +210,29 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   /// Listener for the story controller to handle various story actions.
   void _storyControllerListener() {
-    final controller = widget.flutterStoryController;
-    final storyStatus = controller?.storyStatus;
-    final jumpIndex = controller?.jumpIndex;
+    final storyStatus = _controller.storyStatus;
+    final jumpIndex = _controller.jumpIndex;
 
     switch (storyStatus) {
       case StoryAction.play:
-        return _resumeMedia();
+        _resumeMedia();
+        break;
 
       case StoryAction.pause:
-        return _pauseMedia();
+        _pauseMedia();
+        break;
 
       case StoryAction.next:
-        return _playNext();
+        _playNext();
+        break;
 
       case StoryAction.previous:
-        return _playPrevious();
+        _playPrevious();
+        break;
 
       case StoryAction.mute:
       case StoryAction.unMute:
-        return _toggleMuteUnMuteMedia();
-      case null:
+        _toggleMuteUnMuteMedia();
         break;
     }
 
