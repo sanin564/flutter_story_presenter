@@ -4,13 +4,21 @@ import '../utils/story_utils.dart';
 
 /// A controller to manage the state and actions of a story view
 class StoryController extends ChangeNotifier {
-  /// The current action status of the story. Defaults to playing.
   StoryAction _storyStatus = StoryAction.play;
+  int _page = 0;
 
+  /// The current action status of the story. Defaults to playing.
   StoryAction get storyStatus => _storyStatus;
 
   set _setStatus(StoryAction status) {
     _storyStatus = status;
+    notifyListeners();
+  }
+
+  int get page => _page;
+
+  set page(int page) {
+    _page = page;
     notifyListeners();
   }
 
