@@ -269,6 +269,7 @@ class _StoryPresenterState extends State<StoryPresenter>
         return;
       }
 
+      _storyController.page -= 1;
       _resetAnimation();
       if (mounted) {
         setState(() {});
