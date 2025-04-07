@@ -124,18 +124,6 @@ class _HomeState extends State<Home> {
               )),
           url: "Happy Independence Day",
         ),
-        StoryItem(
-          storyItemType: StoryItemType.web,
-          url:
-              'https://www.ndtv.com/webstories/travel/10-things-to-do-in-amritsar-from-golden-temple-visit-to-wagah-border-47',
-          duration: const Duration(seconds: 20),
-          imageConfig: StoryViewImageConfig(
-            fit: BoxFit.contain,
-            progressIndicatorBuilder: (p0, p1, p2) => const Center(
-              child: CupertinoActivityIndicator(),
-            ),
-          ),
-        ),
       ],
     ),
     StoryModel(
