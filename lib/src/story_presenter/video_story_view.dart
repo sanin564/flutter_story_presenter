@@ -40,13 +40,12 @@ class _VideoStoryViewState extends State<VideoStoryView> {
 
   @override
   void initState() {
+    super.initState();
     _initialiseVideoPlayer().then((_) {
       if (videoStatus.isLive) {
         controller.addListener(videoListener);
       }
     });
-
-    super.initState();
   }
 
   /// Initializes the video player controller based on the source of the video.
@@ -83,7 +82,9 @@ class _VideoStoryViewState extends State<VideoStoryView> {
       videoStatus = VideoStatus.error;
       debugPrint('$e');
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void videoListener() {
