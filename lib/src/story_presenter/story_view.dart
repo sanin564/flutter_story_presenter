@@ -119,7 +119,7 @@ class StoryPresenter extends StatefulWidget {
 
 class _StoryPresenterState extends State<StoryPresenter>
     with WidgetsBindingObserver, TickerProviderStateMixin {
-  AnimationController? _animationController;
+  late AnimationController _animationController;
   Animation? _currentProgressAnimation;
   double currentItemProgress = 0;
   VideoPlayerController? _currentVideoPlayer;
@@ -136,13 +136,12 @@ class _StoryPresenterState extends State<StoryPresenter>
     super.initState();
 
     _initStoryController();
-    _disposeAnimeController();
-
-    pageController = PageController(initialPage: _storyController.page);
 
     _animationController = AnimationController(
       vsync: this,
     );
+
+    pageController = PageController(initialPage: _storyController.page);
 
     widget.onStoryChanged?.call(_storyController.page);
 
@@ -176,7 +175,7 @@ class _StoryPresenterState extends State<StoryPresenter>
     pageController.dispose();
 
     _disposeStoryController();
-    _disposeAnimeController();
+    _animationController.dispose();
 
     _audioDurationSubscriptionStream?.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -190,14 +189,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     }
   }
 
-  void _disposeAnimeController() {
-    if (_animationController != null) {
-      _animationController!.reset();
-      _animationController!.dispose();
-      _animationController = null;
-    }
-  }
-
   void _disposeVideoController() {
     if (_currentVideoPlayer != null) {
       _currentVideoPlayer?.removeListener(videoListener);
@@ -206,8 +197,8 @@ class _StoryPresenterState extends State<StoryPresenter>
   }
 
   void _forwardAnimation({double? from}) {
-    if (_animationController?.duration != null) {
-      _animationController!.forward(from: from);
+    if (_animationController.duration != null) {
+      _animationController.forward(from: from);
     }
   }
 
@@ -233,7 +224,7 @@ class _StoryPresenterState extends State<StoryPresenter>
     void pauseMedia() {
       _audioPlayer?.pause();
       _currentVideoPlayer?.pause();
-      _animationController?.stop(canceled: false);
+      _animationController.stop(canceled: false);
     }
 
     /// Plays the next story item.
@@ -319,10 +310,10 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   /// Resets the animation controller and its listeners.
   void _resetAnimation() {
-    _animationController?.reset();
+    _animationController.reset();
     _forwardAnimation();
     _animationController
-      ?..removeListener(animationListener)
+      ..removeListener(animationListener)
       ..removeStatusListener(animationStatusListener);
   }
 
@@ -330,10 +321,7 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _startStoryCountdown() {
     if (currentItem.storyItemType.isVideo) {
       if (_currentVideoPlayer != null) {
-        _animationController ??= AnimationController(
-          vsync: this,
-        );
-        _animationController?.duration = _currentVideoPlayer!.value.duration;
+        _animationController.duration = _currentVideoPlayer!.value.duration;
         _currentVideoPlayer!.addListener(videoListener);
       }
       return;
@@ -342,14 +330,11 @@ class _StoryPresenterState extends State<StoryPresenter>
     if (currentItem.audioConfig != null) {
       _audioPlayer?.durationFuture?.then((v) {
         _totalAudioDuration = v;
-        _animationController ??= AnimationController(
-          vsync: this,
-        );
 
-        _animationController?.duration = v;
+        _animationController.duration = v;
 
         _currentProgressAnimation =
-            Tween<double>(begin: 0, end: 1).animate(_animationController!)
+            Tween<double>(begin: 0, end: 1).animate(_animationController)
               ..addListener(animationListener)
               ..addStatusListener(animationStatusListener);
 
@@ -372,14 +357,10 @@ class _StoryPresenterState extends State<StoryPresenter>
       return;
     }
 
-    _animationController ??= AnimationController(
-      vsync: this,
-    );
-
-    _animationController?.duration = currentItem.duration;
+    _animationController.duration = currentItem.duration;
 
     _currentProgressAnimation =
-        Tween<double>(begin: 0, end: 1).animate(_animationController!)
+        Tween<double>(begin: 0, end: 1).animate(_animationController)
           ..addListener(animationListener)
           ..addStatusListener(animationStatusListener);
 
@@ -398,7 +379,7 @@ class _StoryPresenterState extends State<StoryPresenter>
       }
 
       if (_currentVideoPlayer!.value.isBuffering) {
-        _animationController?.stop(canceled: false);
+        _animationController.stop(canceled: false);
       }
 
       if (_currentVideoPlayer!.value.isPlaying) {
@@ -421,7 +402,7 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   /// Listener for the animation progress.
   void animationListener() {
-    currentItemProgress = _animationController?.value ?? 0;
+    currentItemProgress = _animationController.value;
   }
 
   /// Listener for the animation status.
@@ -547,9 +528,9 @@ class _StoryPresenterState extends State<StoryPresenter>
                                     storyViewIndicatorConfig,
                               );
                             })
-                        : _animationController != null
+                        : _animationController.duration != null
                             ? AnimatedBuilder(
-                                animation: _animationController!,
+                                animation: _animationController,
                                 builder: (context, child) => StoryViewIndicator(
                                   currentIndex: _storyController.page,
                                   currentItemAnimatedValue: currentItemProgress,
