@@ -64,3 +64,11 @@ class VideoUtils {
     );
   }
 }
+
+enum VideoStatus {
+  loading,
+  error,
+  data;
+
+  bool get hasError => this == error;
+}

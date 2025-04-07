@@ -32,8 +32,8 @@ class VideoStoryView extends StatefulWidget {
 }
 
 class _VideoStoryViewState extends State<VideoStoryView> {
-  VideoPlayerController? videoPlayerController;
-  bool hasError = false;
+  late final VideoPlayerController videoPlayerController;
+  VideoStatus videoStatus = VideoStatus.loading;
 
   @override
   void initState() {
@@ -66,13 +66,14 @@ class _VideoStoryViewState extends State<VideoStoryView> {
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       }
-      await videoPlayerController?.initialize();
-      widget.onVideoLoad?.call(videoPlayerController!);
-      await videoPlayerController?.play();
-      await videoPlayerController?.setLooping(widget.looping ?? false);
-      await videoPlayerController?.setVolume(storyItem.isMuteByDefault ? 0 : 1);
+      await videoPlayerController.initialize();
+      videoStatus = VideoStatus.data;
+      widget.onVideoLoad?.call(videoPlayerController);
+      await videoPlayerController.play();
+      await videoPlayerController.setLooping(widget.looping ?? false);
+      await videoPlayerController.setVolume(storyItem.isMuteByDefault ? 0 : 1);
     } catch (e) {
-      hasError = true;
+      videoStatus = VideoStatus.error;
       debugPrint('$e');
     }
     setState(() {});
@@ -82,7 +83,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
 
   @override
   void dispose() {
-    videoPlayerController?.dispose();
+    videoPlayerController.dispose();
     super.dispose();
   }
 
@@ -95,17 +96,17 @@ class _VideoStoryViewState extends State<VideoStoryView> {
         if (widget.storyItem.videoConfig?.loadingWidget != null) ...{
           widget.storyItem.videoConfig!.loadingWidget!,
         },
-        if (widget.storyItem.errorWidget != null && hasError) ...{
+        if (widget.storyItem.errorWidget != null && videoStatus.hasError) ...{
           // Display the error widget if an error occurred.
           widget.storyItem.errorWidget!,
         },
-        if (videoPlayerController != null) ...{
+        if (videoStatus == VideoStatus.data) ...{
           if (widget.storyItem.videoConfig?.useVideoAspectRatio ?? false) ...{
             // Display the video with aspect ratio if specified.
             AspectRatio(
-              aspectRatio: videoPlayerController!.value.aspectRatio,
+              aspectRatio: videoPlayerController.value.aspectRatio,
               child: VideoPlayer(
-                videoPlayerController!,
+                videoPlayerController,
               ),
             )
           } else ...{
@@ -115,10 +116,10 @@ class _VideoStoryViewState extends State<VideoStoryView> {
               alignment: Alignment.center,
               child: SizedBox(
                 width: widget.storyItem.videoConfig?.width ??
-                    videoPlayerController!.value.size.width,
+                    videoPlayerController.value.size.width,
                 height: widget.storyItem.videoConfig?.height ??
-                    videoPlayerController!.value.size.height,
-                child: VideoPlayer(videoPlayerController!),
+                    videoPlayerController.value.size.height,
+                child: VideoPlayer(videoPlayerController),
               ),
             )
           },
