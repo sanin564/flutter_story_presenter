@@ -31,9 +31,9 @@ typedef OnPause = Future<bool> Function();
 typedef OnResume = Future<bool> Function();
 typedef IndicatorWrapper = Widget Function(Widget child);
 
-class FlutterStoryPresenter extends StatefulWidget {
-  const FlutterStoryPresenter({
-    this.flutterStoryController,
+class StoryPresenter extends StatefulWidget {
+  const StoryPresenter({
+    this.storyController,
     this.items = const [],
     this.onStoryChanged,
     this.onLeftTap,
@@ -57,7 +57,7 @@ class FlutterStoryPresenter extends StatefulWidget {
   final List<StoryItem> items;
 
   /// Controller for managing the current playing media.
-  final FlutterStoryController? flutterStoryController;
+  final StoryController? storyController;
 
   /// Callback function triggered whenever the story changes or the user navigates to the previous/next story.
   final OnStoryChanged? onStoryChanged;
@@ -118,10 +118,10 @@ class FlutterStoryPresenter extends StatefulWidget {
   final IndicatorWrapper? indicatorWrapper;
 
   @override
-  State<FlutterStoryPresenter> createState() => _FlutterStoryPresenterState();
+  State<StoryPresenter> createState() => _StoryPresenterState();
 }
 
-class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
+class _StoryPresenterState extends State<StoryPresenter>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   AnimationController? _animationController;
   Animation? _currentProgressAnimation;
@@ -133,7 +133,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   StreamSubscription? _audioDurationSubscriptionStream;
   StreamSubscription? _audioPlayerStateStream;
 
-  late final FlutterStoryController _storyController;
+  late final StoryController _storyController;
   late final PageController pageController;
 
   @override
@@ -156,8 +156,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   }
 
   void _initStoryController() {
-    _storyController =
-        widget.flutterStoryController ?? FlutterStoryController();
+    _storyController = widget.storyController ?? StoryController();
     _storyController.addListener(_storyControllerListener);
   }
 
@@ -192,7 +191,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   void _disposeStoryController() {
     _storyController.removeListener(_storyControllerListener);
-    if (widget.flutterStoryController == null) {
+    if (widget.storyController == null) {
       _storyController.dispose();
     }
   }
@@ -466,7 +465,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
                       key: UniqueKey(),
                       builder: (audioPlayer) {
                         return currentItem.customWidget!(
-                                widget.flutterStoryController, audioPlayer) ??
+                                widget.storyController, audioPlayer) ??
                             const SizedBox.shrink();
                       },
                       storyItem: currentItem,

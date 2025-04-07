@@ -1,6 +1,6 @@
 import '../controller/flutter_story_controller.dart';
 
-/// To Perform Action on Story with [FlutterStoryController]
+/// To Perform Action on Story with [StoryController]
 enum StoryAction {
   play,
   pause,

@@ -32,7 +32,7 @@ class StoryItem {
   final Widget? errorWidget;
 
   /// Custom Widget to display fully instead of any other view
-  final Widget? Function(FlutterStoryController?, AudioPlayer? audioPlayer)?
+  final Widget? Function(StoryController?, AudioPlayer? audioPlayer)?
       customWidget;
 
   final StoryItemType storyItemType;

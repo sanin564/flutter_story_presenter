@@ -223,11 +223,11 @@ class MyStoryView extends StatefulWidget {
 }
 
 class _MyStoryViewState extends State<MyStoryView> {
-  late FlutterStoryController controller;
+  late StoryController controller;
 
   @override
   void initState() {
-    controller = FlutterStoryController();
+    controller = StoryController();
     super.initState();
   }
 
@@ -242,13 +242,13 @@ class _MyStoryViewState extends State<MyStoryView> {
       height: 4,
       activeColor: Colors.white,
       backgroundCompletedColor: Colors.white,
-      backgroundDisabledColor: Colors.white.withOpacity(0.5),
+      backgroundDisabledColor: Colors.white.withValues(alpha: 0.5),
       horizontalGap: 1,
       borderRadius: 1.5,
     );
 
-    return FlutterStoryPresenter(
-      flutterStoryController: controller,
+    return StoryPresenter(
+      storyController: controller,
       items: widget.storyModel.stories,
       storyViewIndicatorConfig: storyViewIndicatorConfig,
       initialIndex: 0,
@@ -271,7 +271,7 @@ class _MyStoryViewState extends State<MyStoryView> {
         await widget.pageController.nextPage(
             duration: const Duration(milliseconds: 500),
             curve: Curves.decelerate);
-        controller = FlutterStoryController();
+        controller = StoryController();
       },
     );
   }
@@ -374,7 +374,7 @@ class StoryModel {
 class TextOverlayView extends StatelessWidget {
   const TextOverlayView({super.key, required this.controller});
 
-  final FlutterStoryController? controller;
+  final StoryController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -399,7 +399,7 @@ class TextOverlayView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 10,
                         spreadRadius: 0,
                       )
@@ -423,7 +423,7 @@ class TextOverlayView extends StatelessWidget {
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -442,7 +442,7 @@ class TextOverlayView extends StatelessWidget {
                           decoration: InputDecoration(
                               hintText: 'Type something...',
                               hintStyle: TextStyle(
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                               ),
                               border: InputBorder.none),
                         ),
@@ -461,7 +461,7 @@ class TextOverlayView extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                         )
                       ]),
@@ -485,7 +485,7 @@ class TextOverlayView extends StatelessWidget {
 class PostOverlayView extends StatelessWidget {
   const PostOverlayView({super.key, required this.controller});
 
-  final FlutterStoryController? controller;
+  final StoryController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -504,7 +504,7 @@ class PostOverlayView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 0,
                     spreadRadius: 0,
                   )
@@ -587,7 +587,7 @@ class AudioCustomView1 extends StatelessWidget {
   const AudioCustomView1(
       {super.key, required this.controller, this.audioPlayer});
 
-  final FlutterStoryController? controller;
+  final StoryController? controller;
   final AudioPlayer? audioPlayer;
 
   @override
@@ -611,7 +611,7 @@ class AudioCustomView1 extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 10,
                 )
               ],
@@ -640,7 +640,7 @@ class AudioCustomView1 extends StatelessWidget {
                           return Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              color: Colors.black.withOpacity(0.54),
+                              color: Colors.black.withValues(alpha: 0.54),
                             ),
                             height: 50,
                             width: 50,
@@ -670,7 +670,7 @@ class AudioCustomView1 extends StatelessWidget {
                       Text(
                         "Andy grammer",
                         style: TextStyle(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

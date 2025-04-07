@@ -3,43 +3,44 @@ import 'package:flutter/material.dart';
 import '../utils/story_utils.dart';
 
 /// A controller to manage the state and actions of a story view
-class FlutterStoryController extends ChangeNotifier {
+class StoryController extends ChangeNotifier {
   /// The current action status of the story. Defaults to playing.
-  StoryAction storyStatus = StoryAction.play;
+  StoryAction _storyStatus = StoryAction.play;
+
+  StoryAction get storyStatus => _storyStatus;
+
+  set _setStatus(StoryAction status) {
+    _storyStatus = status;
+    notifyListeners();
+  }
 
   /// Sets the story status to play and notifies listeners of the change.
   void play() {
-    storyStatus = StoryAction.play;
-    notifyListeners();
+    _setStatus = StoryAction.play;
   }
 
   /// Sets the story status to pause and notifies listeners of the change.
   void pause() {
-    storyStatus = StoryAction.pause;
-    notifyListeners();
+    _setStatus = StoryAction.pause;
   }
 
   /// Sets the story status to next (move to the next story) and notifies listeners of the change.
   void next() {
-    storyStatus = StoryAction.next;
-    notifyListeners();
+    _setStatus = StoryAction.next;
   }
 
   /// Sets the story status to mute (mute audio) and notifies listeners of the change.
   void mute() {
-    storyStatus = StoryAction.mute;
-    notifyListeners();
+    _setStatus = StoryAction.mute;
   }
 
   /// Sets the story status to unMute (un-mute audio) and notifies listeners of the change.
   void unMute() {
-    storyStatus = StoryAction.unMute;
-    notifyListeners();
+    _setStatus = StoryAction.unMute;
   }
 
   /// Sets the story status to previous (move to the previous story) and notifies listeners of the change.
   void previous() {
-    storyStatus = StoryAction.previous;
-    notifyListeners();
+    _setStatus = StoryAction.previous;
   }
 }
