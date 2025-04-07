@@ -68,7 +68,8 @@ class VideoUtils {
 enum VideoStatus {
   loading,
   error,
-  data;
+  live;
 
   bool get hasError => this == error;
+  bool get isLive => this == live;
 }

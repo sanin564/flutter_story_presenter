@@ -40,8 +40,12 @@ class _VideoStoryViewState extends State<VideoStoryView> {
 
   @override
   void initState() {
-    _initialiseVideoPlayer();
-    controller.addListener(videoListener);
+    _initialiseVideoPlayer().then((_) {
+      if (videoStatus.isLive) {
+        controller.addListener(videoListener);
+      }
+    });
+
     super.initState();
   }
 
@@ -70,7 +74,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
         );
       }
       await controller.initialize();
-      videoStatus = VideoStatus.data;
+      videoStatus = VideoStatus.live;
       widget.onVideoLoad?.call(controller);
       await controller.play();
       await controller.setLooping(widget.looping ?? false);
@@ -92,8 +96,11 @@ class _VideoStoryViewState extends State<VideoStoryView> {
 
   @override
   void dispose() {
-    controller.removeListener(videoListener);
-    controller.dispose();
+    if (videoStatus.isLive) {
+      controller.removeListener(videoListener);
+      controller.dispose();
+    }
+
     super.dispose();
   }
 
@@ -110,7 +117,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
           // Display the error widget if an error occurred.
           widget.storyItem.errorWidget!,
         },
-        if (videoStatus == VideoStatus.data) ...{
+        if (videoStatus == VideoStatus.live) ...{
           if (widget.storyItem.videoConfig?.useVideoAspectRatio ?? false) ...{
             // Display the video with aspect ratio if specified.
             AspectRatio(
