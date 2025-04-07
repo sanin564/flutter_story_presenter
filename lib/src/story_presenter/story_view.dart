@@ -136,11 +136,14 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   StreamSubscription? _audioDurationSubscriptionStream;
   StreamSubscription? _audioPlayerStateStream;
 
-  late final FlutterStoryController _controller;
+  late final FlutterStoryController _storyController;
+  late final PageController pageController;
 
   @override
   void initState() {
     super.initState();
+
+    pageController = PageController();
 
     _initStoryController();
     _disposeAnimeController();
@@ -156,8 +159,9 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   }
 
   void _initStoryController() {
-    _controller = widget.flutterStoryController ?? FlutterStoryController();
-    _controller.addListener(_storyControllerListener);
+    _storyController =
+        widget.flutterStoryController ?? FlutterStoryController();
+    _storyController.addListener(_storyControllerListener);
   }
 
   @override
@@ -165,12 +169,12 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     log("STATE ==> $state");
     switch (state) {
       case AppLifecycleState.resumed:
-        _controller.play();
+        _storyController.play();
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
       case AppLifecycleState.hidden:
-        _controller.pause();
+        _storyController.pause();
         break;
       case AppLifecycleState.detached:
         break;
@@ -179,6 +183,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
 
   @override
   void dispose() {
+    pageController.dispose();
+
     _disposeStoryController();
     _disposeAnimeController();
 
@@ -188,9 +194,9 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   }
 
   void _disposeStoryController() {
-    _controller.removeListener(_storyControllerListener);
+    _storyController.removeListener(_storyControllerListener);
     if (widget.flutterStoryController == null) {
-      _controller.dispose();
+      _storyController.dispose();
     }
   }
 
@@ -306,8 +312,8 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       }
     }
 
-    final storyStatus = _controller.storyStatus;
-    final jumpIndex = _controller.jumpIndex;
+    final storyStatus = _storyController.storyStatus;
+    final jumpIndex = _storyController.jumpIndex;
 
     switch (storyStatus) {
       case StoryAction.play:
@@ -336,7 +342,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         jumpIndex >= 0 &&
         jumpIndex < widget.items.length) {
       currentIndex = jumpIndex - 1;
-      _controller.next();
+      _storyController.next();
     }
   }
 
@@ -384,9 +390,9 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
         (event) {
           if (event.playing) {
             if (event.processingState == ProcessingState.loading) {
-              _controller.pause();
+              _storyController.pause();
             } else {
-              _controller.play();
+              _storyController.play();
             }
           }
         },
@@ -416,7 +422,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
       final pos = _currentVideoPlayer!.value.position.inMilliseconds;
 
       if (pos == dur) {
-        _controller.next();
+        _storyController.next();
         return;
       }
 
@@ -437,7 +443,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     final pos = _totalAudioDuration?.inMilliseconds;
 
     if (pos == dur) {
-      _controller.next();
+      _storyController.next();
       return;
     }
   }
@@ -450,7 +456,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
   /// Listener for the animation status.
   void animationStatusListener(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
-      _controller.next();
+      _storyController.next();
     }
   }
 
@@ -460,6 +466,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
     return Stack(
       children: [
         PageView.builder(
+          controller: pageController,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: widget.items.length,
           itemBuilder: (context, index) {
@@ -622,7 +629,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onLeftTap?.call() ?? false;
-                if (!willUserHandle) _controller.previous();
+                if (!willUserHandle) _storyController.previous();
               },
             ),
           ),
@@ -635,7 +642,7 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
             child: GestureDetector(
               onTap: () async {
                 final willUserHandle = await widget.onRightTap?.call() ?? false;
-                if (!willUserHandle) _controller.next();
+                if (!willUserHandle) _storyController.next();
               },
             ),
           ),
@@ -649,19 +656,19 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
               key: ValueKey('$currentIndex'),
               onLongPressDown: (details) async {
                 final willUserHandle = await widget.onPause?.call() ?? false;
-                if (!willUserHandle) _controller.pause();
+                if (!willUserHandle) _storyController.pause();
               },
               onLongPressUp: () async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _controller.play();
+                if (!willUserHandle) _storyController.play();
               },
               onLongPressEnd: (details) async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _controller.play();
+                if (!willUserHandle) _storyController.play();
               },
               onLongPressCancel: () async {
                 final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _controller.play();
+                if (!willUserHandle) _storyController.play();
               },
               onVerticalDragStart: widget.onSlideStart?.call,
               onVerticalDragUpdate: widget.onSlideDown?.call,
