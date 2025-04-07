@@ -319,14 +319,6 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   /// Starts the countdown for the story item duration.
   void _startStoryCountdown() {
-    if (currentItem.storyItemType.isVideo) {
-      if (_currentVideoPlayer != null) {
-        _animationController.duration = _currentVideoPlayer!.value.duration;
-        _currentVideoPlayer!.addListener(videoListener);
-      }
-      return;
-    }
-
     if (currentItem.audioConfig != null) {
       _audioPlayer?.durationFuture?.then((v) {
         _totalAudioDuration = v;
@@ -376,16 +368,6 @@ class _StoryPresenterState extends State<StoryPresenter>
       if (pos == dur) {
         _storyController.next();
         return;
-      }
-
-      if (_currentVideoPlayer!.value.isBuffering) {
-        _animationController.stop(canceled: false);
-      }
-
-      if (_currentVideoPlayer!.value.isPlaying) {
-        if (_currentProgressAnimation != null) {
-          _forwardAnimation(from: _currentProgressAnimation?.value);
-        }
       }
     }
   }
