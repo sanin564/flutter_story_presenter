@@ -118,7 +118,7 @@ class StoryPresenter extends StatefulWidget {
 }
 
 class _StoryPresenterState extends State<StoryPresenter>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   AnimationController? _animationController;
   Animation? _currentProgressAnimation;
   double currentItemProgress = 0;
@@ -248,6 +248,9 @@ class _StoryPresenterState extends State<StoryPresenter>
       }
 
       _resetAnimation();
+      if (mounted) {
+        setState(() {});
+      }
     }
 
     /// Plays the previous story item.
@@ -435,6 +438,7 @@ class _StoryPresenterState extends State<StoryPresenter>
       children: [
         PageView.builder(
           controller: pageController,
+          allowImplicitScrolling: true,
           physics: const NeverScrollableScrollPhysics(),
           onPageChanged: widget.onStoryChanged,
           itemCount: widget.items.length,
