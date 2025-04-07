@@ -7,9 +7,6 @@ class FlutterStoryController extends ChangeNotifier {
   /// The current action status of the story. Defaults to playing.
   StoryAction storyStatus = StoryAction.play;
 
-  /// The index to which the story should jump. Null if no jump is required.
-  int? jumpIndex;
-
   /// Sets the story status to play and notifies listeners of the change.
   void play() {
     storyStatus = StoryAction.play;
@@ -43,14 +40,6 @@ class FlutterStoryController extends ChangeNotifier {
   /// Sets the story status to previous (move to the previous story) and notifies listeners of the change.
   void previous() {
     storyStatus = StoryAction.previous;
-    notifyListeners();
-  }
-
-  /// Sets the index of the story to jump to and notifies listeners of the change.
-  ///
-  /// [index] The index to which the story should jump.
-  void jumpTo(int index) {
-    jumpIndex = index;
     notifyListeners();
   }
 }
