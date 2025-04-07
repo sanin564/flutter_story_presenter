@@ -40,7 +40,6 @@ class StoryPresenter extends StatefulWidget {
     this.onRightTap,
     this.onCompleted,
     this.onPreviousCompleted,
-    this.initialIndex = 0,
     this.storyViewIndicatorConfig,
     this.onVideoLoad,
     this.headerWidget,
@@ -51,7 +50,7 @@ class StoryPresenter extends StatefulWidget {
     this.onResume,
     this.indicatorWrapper,
     super.key,
-  }) : assert(initialIndex < items.length);
+  });
 
   /// List of StoryItem objects to display in the story view.
   final List<StoryItem> items;
@@ -85,9 +84,6 @@ class StoryPresenter extends StatefulWidget {
 
   /// Callback function triggered when user starts drag downs the storyview.
   final OnSlideStart? onSlideStart;
-
-  /// Index to start playing the story from initially.
-  final int initialIndex;
 
   /// Configuration and styling options for the story view indicator.
   final StoryViewIndicatorConfig? storyViewIndicatorConfig;
@@ -125,7 +121,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   AnimationController? _animationController;
   Animation? _currentProgressAnimation;
-  int currentIndex = 0;
   double currentItemProgress = 0;
   VideoPlayerController? _currentVideoPlayer;
   AudioPlayer? _audioPlayer;
@@ -140,17 +135,16 @@ class _StoryPresenterState extends State<StoryPresenter>
   void initState() {
     super.initState();
 
-    pageController = PageController();
-
     _initStoryController();
     _disposeAnimeController();
+
+    pageController = PageController(initialPage: _storyController.page);
 
     _animationController = AnimationController(
       vsync: this,
     );
 
-    currentIndex = widget.initialIndex;
-    widget.onStoryChanged?.call(currentIndex);
+    widget.onStoryChanged?.call(_storyController.page);
 
     WidgetsBinding.instance.addObserver(this);
   }
@@ -218,7 +212,7 @@ class _StoryPresenterState extends State<StoryPresenter>
   }
 
   /// Returns the current story item.
-  StoryItem get currentItem => widget.items[currentIndex];
+  StoryItem get currentItem => widget.items[_storyController.page];
 
   /// Returns the configuration for the story view indicator.
   StoryViewIndicatorConfig get storyViewIndicatorConfig =>
@@ -244,25 +238,16 @@ class _StoryPresenterState extends State<StoryPresenter>
 
     /// Plays the next story item.
     void playNext() async {
-      if (currentIndex != (widget.items.length - 1)) {
-        setState(() {});
-        _disposeVideoController();
-      }
-
-      if (currentIndex == widget.items.length - 1) {
+      if (_storyController.page == widget.items.length - 1) {
         await widget.onCompleted?.call();
-        if (mounted) {
-          setState(() {});
-        }
         return;
+      } else {
+        _disposeVideoController();
+        _storyController.page += 1;
+        pageController.jumpToPage(_storyController.page);
       }
 
-      currentIndex = currentIndex + 1;
       _resetAnimation();
-      widget.onStoryChanged?.call(currentIndex);
-      if (mounted) {
-        setState(() {});
-      }
     }
 
     /// Plays the previous story item.
@@ -274,7 +259,7 @@ class _StoryPresenterState extends State<StoryPresenter>
       }
       _disposeVideoController();
 
-      if (currentIndex == 0) {
+      if (_storyController.page == 0) {
         _resetAnimation();
         _startStoryCountdown();
         if (mounted) {
@@ -285,8 +270,6 @@ class _StoryPresenterState extends State<StoryPresenter>
       }
 
       _resetAnimation();
-      currentIndex = currentIndex - 1;
-      widget.onStoryChanged?.call(currentIndex);
       if (mounted) {
         setState(() {});
       }
@@ -452,6 +435,7 @@ class _StoryPresenterState extends State<StoryPresenter>
         PageView.builder(
           controller: pageController,
           physics: const NeverScrollableScrollPhysics(),
+          onPageChanged: widget.onStoryChanged,
           itemCount: widget.items.length,
           itemBuilder: (context, index) {
             return Stack(
@@ -481,7 +465,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                 if (currentItem.storyItemType.isImage) ...{
                   Positioned.fill(
                     child: ImageStoryView(
-                      key: ValueKey('$currentIndex'),
+                      key: ValueKey('${_storyController.page}'),
                       storyItem: currentItem,
                       onImageLoaded: (isLoaded) {
                         _startStoryCountdown();
@@ -498,7 +482,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                   Positioned.fill(
                     child: VideoStoryView(
                       storyItem: currentItem,
-                      key: ValueKey('$currentIndex'),
+                      key: ValueKey('${_storyController.page}'),
                       looping: false,
                       onVideoLoad: (videoPlayer) {
                         _currentVideoPlayer = videoPlayer;
@@ -515,7 +499,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                   Positioned.fill(
                     child: WebStoryView(
                       storyItem: currentItem,
-                      key: ValueKey('$currentIndex'),
+                      key: ValueKey('${_storyController.page}'),
                       onWebViewLoaded: (controller, loaded) {
                         if (loaded) {
                           _startStoryCountdown();
@@ -530,7 +514,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                   Positioned.fill(
                     child: TextStoryView(
                       storyItem: currentItem,
-                      key: ValueKey('$currentIndex'),
+                      key: ValueKey('${_storyController.page}'),
                       onTextStoryLoaded: (loaded) {
                         _startStoryCountdown();
                       },
@@ -559,7 +543,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                             controller: _currentVideoPlayer!,
                             builder: (context, progress, duration, child) {
                               return StoryViewIndicator(
-                                currentIndex: currentIndex,
+                                currentIndex: _storyController.page,
                                 currentItemAnimatedValue:
                                     progress.inMilliseconds /
                                         duration.inMilliseconds,
@@ -572,7 +556,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                             ? AnimatedBuilder(
                                 animation: _animationController!,
                                 builder: (context, child) => StoryViewIndicator(
-                                  currentIndex: currentIndex,
+                                  currentIndex: _storyController.page,
                                   currentItemAnimatedValue: currentItemProgress,
                                   totalItems: widget.items.length,
                                   storyViewIndicatorConfig:
@@ -580,7 +564,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                                 ),
                               )
                             : StoryViewIndicator(
-                                currentIndex: currentIndex,
+                                currentIndex: _storyController.page,
                                 currentItemAnimatedValue: currentItemProgress,
                                 totalItems: widget.items.length,
                                 storyViewIndicatorConfig:
@@ -626,7 +610,7 @@ class _StoryPresenterState extends State<StoryPresenter>
             width: mdSize.width,
             height: mdSize.height,
             child: GestureDetector(
-              key: ValueKey('$currentIndex'),
+              key: ValueKey('${_storyController.page}'),
               onLongPressDown: (details) async {
                 final willUserHandle = await widget.onPause?.call() ?? false;
                 if (!willUserHandle) _storyController.pause();

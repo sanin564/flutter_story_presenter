@@ -251,7 +251,6 @@ class _MyStoryViewState extends State<MyStoryView> {
       storyController: controller,
       items: widget.storyModel.stories,
       storyViewIndicatorConfig: storyViewIndicatorConfig,
-      initialIndex: 0,
       headerWidget: ProfileView(storyModel: widget.storyModel),
       onLeftTap: () async {
         /// do some work here
