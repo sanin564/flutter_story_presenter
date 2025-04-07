@@ -207,7 +207,6 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _disposeVideoController() {
     if (_currentVideoPlayer != null) {
       _currentVideoPlayer?.removeListener(videoListener);
-      _currentVideoPlayer?.dispose();
       _currentVideoPlayer = null;
     }
   }
