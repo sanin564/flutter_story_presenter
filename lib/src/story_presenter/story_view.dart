@@ -439,95 +439,85 @@ class _StoryPresenterState extends State<StoryPresenter>
           onPageChanged: widget.onStoryChanged,
           itemCount: widget.items.length,
           itemBuilder: (context, index) {
-            return Stack(
-              children: [
-                if (currentItem.storyItemType.isCustom &&
-                    currentItem.customWidget != null) ...{
-                  Positioned.fill(
-                    child: StoryCustomWidgetWrapper(
-                      isAutoStart: true,
-                      key: UniqueKey(),
-                      builder: (audioPlayer) {
-                        return currentItem.customWidget!(
-                                widget.storyController, audioPlayer) ??
-                            const SizedBox.shrink();
-                      },
-                      storyItem: currentItem,
-                      onLoaded: () {
-                        _startStoryCountdown();
-                      },
-                      onAudioLoaded: (audioPlayer) {
-                        _audioPlayer = audioPlayer;
-                        _startStoryCountdown();
-                      },
-                    ),
-                  ),
-                },
-                if (currentItem.storyItemType.isImage) ...{
-                  Positioned.fill(
-                    child: ImageStoryView(
-                      key: ValueKey('${_storyController.page}'),
-                      storyItem: currentItem,
-                      onImageLoaded: (isLoaded) {
-                        _startStoryCountdown();
-                      },
-                      onAudioLoaded: (audioPlayer) {
-                        _audioPlayer = audioPlayer;
+            final item = widget.items[index];
 
-                        _startStoryCountdown();
-                      },
-                    ),
-                  ),
-                },
-                if (currentItem.storyItemType.isVideo) ...{
-                  Positioned.fill(
-                    child: VideoStoryView(
-                      storyItem: currentItem,
-                      key: ValueKey('${_storyController.page}'),
-                      looping: false,
-                      onVideoLoad: (videoPlayer) {
-                        _currentVideoPlayer = videoPlayer;
-                        widget.onVideoLoad?.call(videoPlayer);
-                        _startStoryCountdown();
-                        if (mounted) {
-                          setState(() {});
-                        }
-                      },
-                    ),
-                  ),
-                },
-                if (currentItem.storyItemType.isWeb) ...{
-                  Positioned.fill(
-                    child: WebStoryView(
-                      storyItem: currentItem,
-                      key: ValueKey('${_storyController.page}'),
-                      onWebViewLoaded: (controller, loaded) {
-                        if (loaded) {
-                          _startStoryCountdown();
-                        }
-                        currentItem.webConfig?.onWebViewLoaded
-                            ?.call(controller, loaded);
-                      },
-                    ),
-                  ),
-                },
-                if (currentItem.storyItemType.isText) ...{
-                  Positioned.fill(
-                    child: TextStoryView(
-                      storyItem: currentItem,
-                      key: ValueKey('${_storyController.page}'),
-                      onTextStoryLoaded: (loaded) {
-                        _startStoryCountdown();
-                      },
-                      onAudioLoaded: (audioPlayer) {
-                        _audioPlayer = audioPlayer;
-                        _startStoryCountdown();
-                      },
-                    ),
-                  ),
-                },
-              ],
-            );
+            switch (item.storyItemType) {
+              case StoryItemType.image:
+                return ImageStoryView(
+                  key: ValueKey('${_storyController.page}'),
+                  storyItem: item,
+                  onImageLoaded: (isLoaded) {
+                    _startStoryCountdown();
+                  },
+                  onAudioLoaded: (audioPlayer) {
+                    _audioPlayer = audioPlayer;
+
+                    _startStoryCountdown();
+                  },
+                );
+
+              case StoryItemType.video:
+                return VideoStoryView(
+                  storyItem: item,
+                  key: ValueKey('${_storyController.page}'),
+                  looping: false,
+                  onVideoLoad: (videoPlayer) {
+                    _currentVideoPlayer = videoPlayer;
+                    widget.onVideoLoad?.call(videoPlayer);
+                    _startStoryCountdown();
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  },
+                );
+
+              case StoryItemType.text:
+                return TextStoryView(
+                  storyItem: item,
+                  key: ValueKey('${_storyController.page}'),
+                  onTextStoryLoaded: (loaded) {
+                    _startStoryCountdown();
+                  },
+                  onAudioLoaded: (audioPlayer) {
+                    _audioPlayer = audioPlayer;
+                    _startStoryCountdown();
+                  },
+                );
+
+              case StoryItemType.web:
+                return WebStoryView(
+                  storyItem: item,
+                  key: ValueKey('${_storyController.page}'),
+                  onWebViewLoaded: (controller, loaded) {
+                    if (loaded) {
+                      _startStoryCountdown();
+                    }
+                    item.webConfig?.onWebViewLoaded?.call(
+                      controller,
+                      loaded,
+                    );
+                  },
+                );
+
+              case StoryItemType.custom:
+                return StoryCustomWidgetWrapper(
+                  isAutoStart: true,
+                  key: UniqueKey(),
+                  builder: (audioPlayer) {
+                    return item.customWidget!(
+                            widget.storyController, audioPlayer) ??
+                        const SizedBox.shrink();
+                  },
+                  storyItem: item,
+                  onLoaded: () {
+                    _startStoryCountdown();
+                  },
+                  onAudioLoaded: (audioPlayer) {
+                    _audioPlayer = audioPlayer;
+                    _startStoryCountdown();
+                  },
+                );
+            }
           },
         ),
         Builder(
