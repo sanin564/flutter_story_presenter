@@ -94,9 +94,6 @@ class _VideoStoryViewState extends State<VideoStoryView> {
       children: [
         if (widget.storyItem.videoConfig?.loadingWidget != null) ...{
           widget.storyItem.videoConfig!.loadingWidget!,
-        } else if (widget.storyItem.thumbnail != null) ...{
-          // Display the thumbnail if provided.
-          widget.storyItem.thumbnail!,
         },
         if (widget.storyItem.errorWidget != null && hasError) ...{
           // Display the error widget if an error occurred.

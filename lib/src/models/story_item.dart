@@ -6,7 +6,6 @@ class StoryItem {
   const StoryItem({
     this.url,
     required this.storyItemType,
-    this.thumbnail,
     this.isMuteByDefault = false,
     this.duration = const Duration(seconds: 3),
     this.storyItemSource = StoryItemSource.network,
@@ -28,9 +27,6 @@ class StoryItem {
 
   /// Duration of displaying the widget
   final Duration duration;
-
-  /// Widget to display beneath main view as thumbnail
-  final Widget? thumbnail;
 
   /// Widget to display when error occurs loading View
   final Widget? errorWidget;

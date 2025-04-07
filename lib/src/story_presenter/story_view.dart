@@ -458,9 +458,6 @@ class _FlutterStoryPresenterState extends State<FlutterStoryPresenter>
           itemBuilder: (context, index) {
             return Stack(
               children: [
-                if (currentItem.thumbnail != null) ...{
-                  currentItem.thumbnail!,
-                },
                 if (currentItem.storyItemType.isCustom &&
                     currentItem.customWidget != null) ...{
                   Positioned.fill(

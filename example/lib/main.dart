@@ -50,21 +50,22 @@ class _HomeState extends State<Home> {
           storyItemType: StoryItemType.video,
           storyItemSource: StoryItemSource.asset,
           url: 'assets/fb8512a35d6f4b2e8917b74a048de71a.MP4',
-          thumbnail: const Center(
-              child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CupertinoActivityIndicator(
-                radius: 15,
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Text('Video Loading')
-            ],
-          )),
           videoConfig: const StoryViewVideoConfig(
             fit: BoxFit.cover,
+            loadingWidget: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CupertinoActivityIndicator(
+                    radius: 15,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text('Video Loading')
+                ],
+              ),
+            ),
           ),
         ),
         StoryItem(
