@@ -189,13 +189,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     }
   }
 
-  void _disposeVideoController() {
-    if (_currentVideoPlayer != null) {
-      _currentVideoPlayer?.removeListener(videoListener);
-      _currentVideoPlayer = null;
-    }
-  }
-
   void _forwardAnimation({double? from}) {
     if (_animationController.duration != null) {
       _animationController.forward(from: from);
@@ -233,7 +226,6 @@ class _StoryPresenterState extends State<StoryPresenter>
         await widget.onCompleted?.call();
         return;
       } else {
-        _disposeVideoController();
         _storyController.page += 1;
         pageController.jumpToPage(_storyController.page);
       }
@@ -251,7 +243,6 @@ class _StoryPresenterState extends State<StoryPresenter>
         _audioDurationSubscriptionStream?.cancel();
         _audioPlayerStateStream?.cancel();
       }
-      _disposeVideoController();
 
       if (_storyController.page == 0) {
         _resetAnimation();
@@ -319,6 +310,9 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   /// Starts the countdown for the story item duration.
   void _startStoryCountdown() {
+    if (currentItem.storyItemType.isVideo) {
+      return;
+    }
     if (currentItem.audioConfig != null) {
       _audioPlayer?.durationFuture?.then((v) {
         _totalAudioDuration = v;
@@ -357,19 +351,6 @@ class _StoryPresenterState extends State<StoryPresenter>
           ..addStatusListener(animationStatusListener);
 
     _forwardAnimation();
-  }
-
-  /// Listener for the video player's state changes.
-  void videoListener() {
-    if (_currentVideoPlayer != null) {
-      final dur = _currentVideoPlayer!.value.duration.inMilliseconds;
-      final pos = _currentVideoPlayer!.value.position.inMilliseconds;
-
-      if (pos == dur) {
-        _storyController.next();
-        return;
-      }
-    }
   }
 
   void audioPositionListener(Duration position) {
@@ -436,6 +417,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                       setState(() {});
                     }
                   },
+                  onEnd: _storyController.next,
                 );
 
               case StoryItemType.text:

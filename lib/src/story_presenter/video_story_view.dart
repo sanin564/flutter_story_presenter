@@ -12,10 +12,11 @@ import '../utils/video_utils.dart';
 class VideoStoryView extends StatefulWidget {
   /// Creates a [VideoStoryView] widget.
   const VideoStoryView({
+    super.key,
     required this.storyItem,
     this.onVideoLoad,
     this.looping,
-    super.key,
+    this.onEnd,
   });
 
   /// The story item containing video data and configuration.
@@ -27,17 +28,20 @@ class VideoStoryView extends StatefulWidget {
   /// In case of single video story
   final bool? looping;
 
+  final VoidCallback? onEnd;
+
   @override
   State<VideoStoryView> createState() => _VideoStoryViewState();
 }
 
 class _VideoStoryViewState extends State<VideoStoryView> {
-  late final VideoPlayerController videoPlayerController;
+  late final VideoPlayerController controller;
   VideoStatus videoStatus = VideoStatus.loading;
 
   @override
   void initState() {
     _initialiseVideoPlayer();
+    controller.addListener(videoListener);
     super.initState();
   }
 
@@ -47,31 +51,30 @@ class _VideoStoryViewState extends State<VideoStoryView> {
       final storyItem = widget.storyItem;
       if (storyItem.storyItemSource.isNetwork) {
         // Initialize video controller for network source.
-        videoPlayerController =
-            await VideoUtils.instance.videoControllerFromUrl(
+        controller = await VideoUtils.instance.videoControllerFromUrl(
           url: storyItem.url!,
           cacheFile: storyItem.videoConfig?.cacheVideo,
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       } else if (storyItem.storyItemSource.isFile) {
         // Initialize video controller for file source.
-        videoPlayerController = VideoUtils.instance.videoControllerFromFile(
+        controller = VideoUtils.instance.videoControllerFromFile(
           file: File(storyItem.url!),
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       } else {
         // Initialize video controller for asset source.
-        videoPlayerController = VideoUtils.instance.videoControllerFromAsset(
+        controller = VideoUtils.instance.videoControllerFromAsset(
           assetPath: storyItem.url!,
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       }
-      await videoPlayerController.initialize();
+      await controller.initialize();
       videoStatus = VideoStatus.data;
-      widget.onVideoLoad?.call(videoPlayerController);
-      await videoPlayerController.play();
-      await videoPlayerController.setLooping(widget.looping ?? false);
-      await videoPlayerController.setVolume(storyItem.isMuteByDefault ? 0 : 1);
+      widget.onVideoLoad?.call(controller);
+      await controller.play();
+      await controller.setLooping(widget.looping ?? false);
+      await controller.setVolume(storyItem.isMuteByDefault ? 0 : 1);
     } catch (e) {
       videoStatus = VideoStatus.error;
       debugPrint('$e');
@@ -79,11 +82,18 @@ class _VideoStoryViewState extends State<VideoStoryView> {
     setState(() {});
   }
 
+  void videoListener() {
+    if (controller.value.position >= controller.value.duration) {
+      widget.onEnd?.call();
+    }
+  }
+
   BoxFit get fit => widget.storyItem.videoConfig?.fit ?? BoxFit.cover;
 
   @override
   void dispose() {
-    videoPlayerController.dispose();
+    controller.removeListener(videoListener);
+    controller.dispose();
     super.dispose();
   }
 
@@ -104,9 +114,9 @@ class _VideoStoryViewState extends State<VideoStoryView> {
           if (widget.storyItem.videoConfig?.useVideoAspectRatio ?? false) ...{
             // Display the video with aspect ratio if specified.
             AspectRatio(
-              aspectRatio: videoPlayerController.value.aspectRatio,
+              aspectRatio: controller.value.aspectRatio,
               child: VideoPlayer(
-                videoPlayerController,
+                controller,
               ),
             )
           } else ...{
@@ -116,10 +126,10 @@ class _VideoStoryViewState extends State<VideoStoryView> {
               alignment: Alignment.center,
               child: SizedBox(
                 width: widget.storyItem.videoConfig?.width ??
-                    videoPlayerController.value.size.width,
+                    controller.value.size.width,
                 height: widget.storyItem.videoConfig?.height ??
-                    videoPlayerController.value.size.height,
-                child: VideoPlayer(videoPlayerController),
+                    controller.value.size.height,
+                child: VideoPlayer(controller),
               ),
             )
           },
