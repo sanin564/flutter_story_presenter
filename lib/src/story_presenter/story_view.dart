@@ -416,7 +416,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                     controller: _currentVideoPlayer!,
                     builder: (context, progress, duration, child) {
                       return StoryViewIndicator(
-                        currentIndex: _storyController.page,
+                        currentIndex: index,
                         currentItemAnimatedValue:
                             progress.inMilliseconds / duration.inMilliseconds,
                         totalItems: widget.items.length,
@@ -435,7 +435,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                         ),
                       )
                     : StoryViewIndicator(
-                        currentIndex: _storyController.page,
+                        currentIndex: index,
                         currentItemAnimatedValue:
                             _currentProgressAnimation?.value ?? 0,
                         totalItems: widget.items.length,
