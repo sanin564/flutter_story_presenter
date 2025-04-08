@@ -40,49 +40,41 @@ class _ImageStoryViewState extends State<ImageStoryView> {
   Widget build(BuildContext context) {
     final imageConfig = widget.storyItem.imageConfig;
 
+    Widget child;
+
     /// If the image source is an asset, use [AssetImage].
     if (widget.storyItem.storyItemSource.isAsset) {
-      return VisibilityDetector(
-        key: UniqueKey(),
-        onVisibilityChanged: (info) {
-          if (info.visibleFraction == 0) {
-            widget.onVisibilityChanged?.call(false, _isImageLoaded);
-          } else if (info.visibleFraction == 1) {
-            widget.onVisibilityChanged?.call(true, _isImageLoaded);
+      child = Image(
+        image: AssetImage(widget.storyItem.url!),
+        height: imageConfig?.height,
+        fit: imageConfig?.fit,
+        width: imageConfig?.width,
+        errorBuilder: (context, error, stackTrace) {
+          // Display error widget if provided, otherwise show an empty widget.
+          if (widget.storyItem.errorWidget != null) {
+            return widget.storyItem.errorWidget!;
           }
+          return const SizedBox.shrink();
         },
-        child: Image(
-          image: AssetImage(widget.storyItem.url!),
-          height: imageConfig?.height,
-          fit: imageConfig?.fit,
-          width: imageConfig?.width,
-          errorBuilder: (context, error, stackTrace) {
-            // Display error widget if provided, otherwise show an empty widget.
-            if (widget.storyItem.errorWidget != null) {
-              return widget.storyItem.errorWidget!;
-            }
-            return const SizedBox.shrink();
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            // Workaround for AssetImage loading issues.
-            if (((child as Semantics).child as RawImage).image != null) {
-              markImageAsLoaded();
-              return child;
-            }
-            final w = imageConfig?.progressIndicatorBuilder?.call(
-                context,
-                '',
-                DownloadProgress('', loadingProgress?.expectedTotalBytes ?? 0,
-                    loadingProgress?.cumulativeBytesLoaded ?? 0));
-            return w ?? const SizedBox.shrink();
-          },
-        ),
+        loadingBuilder: (context, child, loadingProgress) {
+          // Workaround for AssetImage loading issues.
+          if (((child as Semantics).child as RawImage).image != null) {
+            markImageAsLoaded();
+            return child;
+          }
+          final w = imageConfig?.progressIndicatorBuilder?.call(
+              context,
+              '',
+              DownloadProgress('', loadingProgress?.expectedTotalBytes ?? 0,
+                  loadingProgress?.cumulativeBytesLoaded ?? 0));
+          return w ?? const SizedBox.shrink();
+        },
       );
     }
 
     /// If the image source is a file, use [FileImage].
     else if (widget.storyItem.storyItemSource.isFile) {
-      return Image(
+      child = Image(
         image: FileImage(File(widget.storyItem.url!)),
         height: imageConfig?.height,
         fit: imageConfig?.fit,
@@ -111,7 +103,7 @@ class _ImageStoryViewState extends State<ImageStoryView> {
     }
 
     /// If the image source is a network URL, use [CachedNetworkImage].
-    return CachedNetworkImage(
+    child = CachedNetworkImage(
       imageUrl: widget.storyItem.url!,
       imageBuilder: (context, imageProvider) {
         // Mark the image as loaded once it is built.
@@ -131,6 +123,18 @@ class _ImageStoryViewState extends State<ImageStoryView> {
         return const SizedBox.shrink();
       },
       progressIndicatorBuilder: imageConfig?.progressIndicatorBuilder,
+    );
+
+    return VisibilityDetector(
+      key: UniqueKey(),
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction == 0) {
+          widget.onVisibilityChanged?.call(false, _isImageLoaded);
+        } else if (info.visibleFraction == 1) {
+          widget.onVisibilityChanged?.call(true, _isImageLoaded);
+        }
+      },
+      child: child,
     );
   }
 }

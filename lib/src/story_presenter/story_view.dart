@@ -28,6 +28,8 @@ typedef OnPause = Future<bool> Function();
 typedef OnResume = Future<bool> Function();
 typedef IndicatorWrapper = Widget Function(Widget child);
 
+final durationNotifier = ValueNotifier(const Duration(seconds: 5));
+
 class StoryPresenter extends StatefulWidget {
   const StoryPresenter({
     this.storyController,
@@ -267,9 +269,14 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   /// Starts the countdown for the story item duration.
   void _startStoryCountdown(Duration duration) {
-    _animationController.duration = duration;
-    _animationController.addStatusListener(animationStatusListener);
-    _animationController.forward();
+    Future(() {
+      _resetAnimation();
+
+      durationNotifier.value = duration;
+      _animationController.duration = duration;
+      _animationController.addStatusListener(animationStatusListener);
+      _animationController.forward();
+    });
   }
 
   /// Listener for the animation status.
@@ -287,6 +294,8 @@ class _StoryPresenterState extends State<StoryPresenter>
       physics: const NeverScrollableScrollPhysics(),
       onPageChanged: (index) {
         _resetAnimation();
+        _currentVideoPlayer?.pause();
+        _currentVideoPlayer?.seekTo(Duration.zero);
         widget.onStoryChanged?.call(index);
       },
       itemCount: widget.items.length,
@@ -398,23 +407,27 @@ class _StoryPresenterState extends State<StoryPresenter>
   }
 
   Widget _buildProgressBar(BuildContext context, int index, StoryItem item) {
-    final child = Align(
-      alignment: storyViewIndicatorConfig.alignment,
-      child: Padding(
-        padding: storyViewIndicatorConfig.margin,
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return StoryViewIndicator(
-              currentIndex: index,
-              currentItemAnimatedValue: _animationController.value,
-              totalItems: widget.items.length,
-              storyViewIndicatorConfig: storyViewIndicatorConfig,
-            );
-          },
-        ),
-      ),
-    );
+    final child = ValueListenableBuilder(
+        valueListenable: durationNotifier,
+        builder: (context, duration, child) {
+          return Align(
+            alignment: storyViewIndicatorConfig.alignment,
+            child: Padding(
+              padding: storyViewIndicatorConfig.margin,
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return StoryViewIndicator(
+                    currentIndex: index,
+                    currentItemAnimatedValue: _animationController.value,
+                    totalItems: widget.items.length,
+                    storyViewIndicatorConfig: storyViewIndicatorConfig,
+                  );
+                },
+              ),
+            ),
+          );
+        });
 
     return widget.indicatorWrapper?.call(child) ?? child;
   }
