@@ -328,7 +328,7 @@ class _StoryPresenterState extends State<StoryPresenter>
             switch (item.storyItemType) {
               case StoryItemType.image:
                 return ImageStoryView(
-                  key: ValueKey('${_storyController.page}'),
+                  key: UniqueKey(),
                   storyItem: item,
                   onImageLoaded: (isLoaded) {
                     _startStoryCountdown();
@@ -338,7 +338,7 @@ class _StoryPresenterState extends State<StoryPresenter>
               case StoryItemType.video:
                 return VideoStoryView(
                   storyItem: item,
-                  key: ValueKey('${_storyController.page}'),
+                  key: UniqueKey(),
                   looping: false,
                   onVideoLoad: (videoPlayer) {
                     _currentVideoPlayer = videoPlayer;
@@ -354,7 +354,7 @@ class _StoryPresenterState extends State<StoryPresenter>
               case StoryItemType.text:
                 return TextStoryView(
                   storyItem: item,
-                  key: ValueKey('${_storyController.page}'),
+                  key: UniqueKey(),
                   onTextStoryLoaded: (loaded) {
                     _startStoryCountdown();
                   },
@@ -363,7 +363,7 @@ class _StoryPresenterState extends State<StoryPresenter>
               case StoryItemType.web:
                 return WebStoryView(
                   storyItem: item,
-                  key: ValueKey('${_storyController.page}'),
+                  key: UniqueKey(),
                   onWebViewLoaded: (controller, loaded) {
                     if (loaded) {
                       _startStoryCountdown();
@@ -474,7 +474,7 @@ class _StoryPresenterState extends State<StoryPresenter>
             width: mdSize.width,
             height: mdSize.height,
             child: GestureDetector(
-              key: ValueKey('${_storyController.page}'),
+              key: UniqueKey(),
               onLongPressDown: (details) async {
                 final willUserHandle = await widget.onPause?.call() ?? false;
                 if (!willUserHandle) _storyController.pause();
