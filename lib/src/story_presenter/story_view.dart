@@ -14,8 +14,6 @@ import '../story_presenter/text_story_view.dart';
 import '../utils/story_utils.dart';
 import 'package:video_player/video_player.dart';
 
-final _currentVideoNotifier = ValueNotifier<VideoPlayerController?>(null);
-
 typedef OnStoryChanged = void Function(int);
 typedef OnCompleted = Future<void> Function();
 typedef OnLeftTap = Future<bool> Function();
@@ -119,6 +117,7 @@ class StoryPresenter extends StatefulWidget {
 class _StoryPresenterState extends State<StoryPresenter>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+  VideoPlayerController? _currentVideoPlayer;
 
   late final StoryController _storyController;
   late final PageController pageController;
@@ -191,13 +190,13 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _storyControllerListener() {
     /// Resumes the media playback.
     void resumeMedia() {
-      _currentVideoNotifier.value?.play();
+      _currentVideoPlayer?.play();
       _animationController.forward(from: _animationController.value);
     }
 
     /// Pauses the media playback.
     void pauseMedia() {
-      _currentVideoNotifier.value?.pause();
+      _currentVideoPlayer?.pause();
       _animationController.stop(canceled: false);
     }
 
@@ -224,12 +223,12 @@ class _StoryPresenterState extends State<StoryPresenter>
 
     /// Toggles mute/unmute for the media.
     void toggleMuteUnMuteMedia() {
-      if (_currentVideoNotifier.value != null) {
-        final videoPlayerValue = _currentVideoNotifier.value!.value;
+      if (_currentVideoPlayer != null) {
+        final videoPlayerValue = _currentVideoPlayer!.value;
         if (videoPlayerValue.volume == 1) {
-          _currentVideoNotifier.value!.setVolume(0);
+          _currentVideoPlayer!.setVolume(0);
         } else {
-          _currentVideoNotifier.value!.setVolume(1);
+          _currentVideoPlayer!.setVolume(1);
         }
       }
     }
@@ -342,12 +341,12 @@ class _StoryPresenterState extends State<StoryPresenter>
           looping: false,
           onVisibilityChanged: (videoPlayer, isvisible) {
             if (isvisible && videoPlayer != null) {
-              _currentVideoNotifier.value = videoPlayer;
+              _currentVideoPlayer = videoPlayer;
               videoPlayer.play();
 
               _startStoryCountdown(videoPlayer.value.duration);
             } else {
-              _currentVideoNotifier.value = null;
+              _currentVideoPlayer = null;
               videoPlayer?.pause();
               videoPlayer?.seekTo(Duration.zero);
             }
