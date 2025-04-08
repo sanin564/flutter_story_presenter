@@ -13,7 +13,6 @@ class StoryController extends ChangeNotifier {
   StoryAction get storyStatus => _storyStatus;
 
   set _setStatus(StoryAction status) {
-    if (status == _storyStatus) return;
     _storyStatus = status;
     notifyListeners();
   }

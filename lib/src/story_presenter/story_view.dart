@@ -191,12 +191,18 @@ class _StoryPresenterState extends State<StoryPresenter>
   StoryViewIndicatorConfig get storyViewIndicatorConfig =>
       widget.storyViewIndicatorConfig ?? const StoryViewIndicatorConfig();
 
+  void _forwardAnimation({double? from}) {
+    if (_animationController.duration != null) {
+      _animationController.forward(from: from);
+    }
+  }
+
   /// Listener for the story controller to handle various story actions.
   void _storyControllerListener() {
     /// Resumes the media playback.
     void resumeMedia() {
       _currentVideoPlayer?.play();
-      _animationController.forward(from: _animationController.value);
+      _forwardAnimation(from: _animationController.value);
     }
 
     /// Pauses the media playback.
@@ -209,7 +215,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     void playNext() async {
       if (_storyController.page == widget.itemCount - 1) {
         await widget.onCompleted?.call();
-        return;
       } else {
         _storyController.page += 1;
         pageController.jumpToPage(_storyController.page);
@@ -272,14 +277,12 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   /// Starts the countdown for the story item duration.
   void _startStoryCountdown(Duration duration) {
-    Future(() {
-      _resetAnimation();
+    _resetAnimation();
 
-      durationNotifier.value = duration;
-      _animationController.duration = duration;
-      _animationController.addStatusListener(animationStatusListener);
-      _animationController.forward();
-    });
+    durationNotifier.value = duration;
+    _animationController.duration = duration;
+    _animationController.addStatusListener(animationStatusListener);
+    _forwardAnimation();
   }
 
   /// Listener for the animation status.
@@ -299,6 +302,7 @@ class _StoryPresenterState extends State<StoryPresenter>
         _resetAnimation();
         _currentVideoPlayer?.pause();
         _currentVideoPlayer?.seekTo(Duration.zero);
+        _currentVideoPlayer = null;
         widget.onStoryChanged?.call(index);
       },
       itemCount: widget.itemCount,
