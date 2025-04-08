@@ -11,9 +11,10 @@ import '../story_presenter/image_story_view.dart';
 import '../story_presenter/video_story_view.dart';
 import '../story_presenter/web_story_view.dart';
 import '../story_presenter/text_story_view.dart';
-import '../utils/smooth_video_progress.dart';
 import '../utils/story_utils.dart';
 import 'package:video_player/video_player.dart';
+
+final _currentVideoNotifier = ValueNotifier<VideoPlayerController?>(null);
 
 typedef OnStoryChanged = void Function(int);
 typedef OnCompleted = Future<void> Function();
@@ -118,7 +119,6 @@ class StoryPresenter extends StatefulWidget {
 class _StoryPresenterState extends State<StoryPresenter>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  VideoPlayerController? _currentVideoPlayer;
 
   late final StoryController _storyController;
   late final PageController pageController;
@@ -180,12 +180,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     }
   }
 
-  void _forwardAnimation({double? from}) {
-    if (_animationController.duration != null) {
-      _animationController.forward(from: from);
-    }
-  }
-
   /// Returns the current story item.
   StoryItem get currentItem => widget.items[_storyController.page];
 
@@ -197,13 +191,13 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _storyControllerListener() {
     /// Resumes the media playback.
     void resumeMedia() {
-      _currentVideoPlayer?.play();
-      _forwardAnimation(from: _animationController.value);
+      _currentVideoNotifier.value?.play();
+      _animationController.forward(from: _animationController.value);
     }
 
     /// Pauses the media playback.
     void pauseMedia() {
-      _currentVideoPlayer?.pause();
+      _currentVideoNotifier.value?.pause();
       _animationController.stop(canceled: false);
     }
 
@@ -218,6 +212,8 @@ class _StoryPresenterState extends State<StoryPresenter>
         _storyController.page += 1;
         pageController.jumpToPage(_storyController.page);
       }
+
+      _animationController.forward();
     }
 
     /// Plays the previous story item.
@@ -230,16 +226,18 @@ class _StoryPresenterState extends State<StoryPresenter>
         _storyController.page -= 1;
         pageController.jumpToPage(_storyController.page);
       }
+
+      _animationController.forward();
     }
 
     /// Toggles mute/unmute for the media.
     void toggleMuteUnMuteMedia() {
-      if (_currentVideoPlayer != null) {
-        final videoPlayerValue = _currentVideoPlayer!.value;
+      if (_currentVideoNotifier.value != null) {
+        final videoPlayerValue = _currentVideoNotifier.value!.value;
         if (videoPlayerValue.volume == 1) {
-          _currentVideoPlayer!.setVolume(0);
+          _currentVideoNotifier.value!.setVolume(0);
         } else {
-          _currentVideoPlayer!.setVolume(1);
+          _currentVideoNotifier.value!.setVolume(1);
         }
       }
     }
@@ -279,11 +277,9 @@ class _StoryPresenterState extends State<StoryPresenter>
   /// Starts the countdown for the story item duration.
   void _startStoryCountdown(Duration duration) {
     _animationController.duration = duration;
-
-    Tween<double>(begin: 0, end: 1).animate(_animationController);
     _animationController.addStatusListener(animationStatusListener);
 
-    _forwardAnimation();
+    _animationController.forward();
   }
 
   /// Listener for the animation status.
@@ -351,19 +347,20 @@ class _StoryPresenterState extends State<StoryPresenter>
           key: UniqueKey(),
           looping: false,
           onVideoLoad: (videoPlayer) {
-            _currentVideoPlayer = videoPlayer;
+            _currentVideoNotifier.value = videoPlayer;
             widget.onVideoLoad?.call(videoPlayer);
             _startStoryCountdown(videoPlayer.value.duration);
           },
           onVisibilityChanged: (videoPlayer, isvisible) {
             if (isvisible) {
-              _currentVideoPlayer = videoPlayer;
+              _currentVideoNotifier.value = videoPlayer;
               videoPlayer?.play();
             } else {
-              _currentVideoPlayer = null;
+              _currentVideoNotifier.value = null;
               videoPlayer?.pause();
             }
           },
+          onEnd: _storyController.next,
         );
 
       case StoryItemType.text:
@@ -413,38 +410,16 @@ class _StoryPresenterState extends State<StoryPresenter>
       alignment: storyViewIndicatorConfig.alignment,
       child: Padding(
         padding: storyViewIndicatorConfig.margin,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _currentVideoPlayer != null
-                ? SmoothVideoProgress(
-                    controller: _currentVideoPlayer!,
-                    builder: (context, progress, duration, child) {
-                      return StoryViewIndicator(
-                        currentIndex: index,
-                        currentItemAnimatedValue:
-                            progress.inMilliseconds / duration.inMilliseconds,
-                        totalItems: widget.items.length,
-                        storyViewIndicatorConfig: storyViewIndicatorConfig,
-                      );
-                    })
-                : _animationController.duration != null
-                    ? AnimatedBuilder(
-                        animation: _animationController,
-                        builder: (context, child) => StoryViewIndicator(
-                          currentIndex: _storyController.page,
-                          currentItemAnimatedValue: _animationController.value,
-                          totalItems: widget.items.length,
-                          storyViewIndicatorConfig: storyViewIndicatorConfig,
-                        ),
-                      )
-                    : StoryViewIndicator(
-                        currentIndex: index,
-                        currentItemAnimatedValue: _animationController.value,
-                        totalItems: widget.items.length,
-                        storyViewIndicatorConfig: storyViewIndicatorConfig,
-                      ),
-          ],
+        child: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return StoryViewIndicator(
+              currentIndex: index,
+              currentItemAnimatedValue: _animationController.value,
+              totalItems: widget.items.length,
+              storyViewIndicatorConfig: storyViewIndicatorConfig,
+            );
+          },
         ),
       ),
     );
