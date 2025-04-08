@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_story_presenter/flutter_story_presenter.dart';
-import 'package:just_audio/just_audio.dart';
 
 class StoryItem {
   const StoryItem({
@@ -15,7 +14,6 @@ class StoryItem {
     this.textConfig,
     this.webConfig,
     this.customWidget,
-    this.audioConfig,
   })  : assert(
           storyItemType == StoryItemType.custom || url != null,
           'URL is required when storyItemType is not custom',
@@ -32,8 +30,7 @@ class StoryItem {
   final Widget? errorWidget;
 
   /// Custom Widget to display fully instead of any other view
-  final Widget? Function(StoryController?, AudioPlayer? audioPlayer)?
-      customWidget;
+  final Widget? Function(StoryController?)? customWidget;
 
   final StoryItemType storyItemType;
 
@@ -51,9 +48,6 @@ class StoryItem {
 
   /// Applicable when [storyItemType] is [StoryItemType.video]
   final StoryViewVideoConfig? videoConfig;
-
-  /// Applicable when you want to add audio in [StoryItemType.image],[StoryItemType.text],[StoryItemType.custom]
-  final StoryViewAudioConfig? audioConfig;
 
   /// Applicable when [storyItemType] is [StoryItemType.text]
   final StoryViewTextConfig? textConfig;

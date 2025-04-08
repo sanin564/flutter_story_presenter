@@ -70,14 +70,8 @@ class _HomeState extends State<Home> {
         ),
         StoryItem(
           storyItemType: StoryItemType.custom,
-          audioConfig: StoryViewAudioConfig(
-            audioPath: 'https://audios.ftcdn.net/08/98/82/47/48K_898824706.m4a',
-            source: StoryItemSource.network,
-            onAudioStart: (p0) {},
-          ),
-          customWidget: (p0, audioPlayer) => AudioCustomView1(
+          customWidget: (p0) => AudioCustomView1(
             controller: p0,
-            audioPlayer: audioPlayer,
           ),
         ),
         StoryItem(

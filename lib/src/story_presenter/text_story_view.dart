@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_story_presenter/flutter_story_presenter.dart';
-import 'package:just_audio/just_audio.dart';
 
 typedef OnTextStoryLoaded = void Function(bool);
 
@@ -9,52 +8,20 @@ class TextStoryView extends StatefulWidget {
     super.key,
     required this.storyItem,
     this.onTextStoryLoaded,
-    this.onAudioLoaded,
   });
 
   final StoryItem storyItem;
   final OnTextStoryLoaded? onTextStoryLoaded;
-  final OnAudioLoaded? onAudioLoaded;
 
   @override
   State<TextStoryView> createState() => _TextStoryViewState();
 }
 
 class _TextStoryViewState extends State<TextStoryView> {
-  AudioPlayer audioPlayer = AudioPlayer();
-
   @override
   void initState() {
-    if (widget.storyItem.audioConfig == null) {
-      widget.onTextStoryLoaded?.call(true);
-    }
-    audioInit();
     super.initState();
-  }
-
-  Future<void> audioInit() async {
-    if (widget.storyItem.audioConfig != null) {
-      switch (widget.storyItem.audioConfig!.source) {
-        case StoryItemSource.asset:
-          audioPlayer.setAsset(widget.storyItem.audioConfig!.audioPath);
-          break;
-        case StoryItemSource.network:
-          audioPlayer.setUrl(widget.storyItem.audioConfig!.audioPath);
-          break;
-        case StoryItemSource.file:
-          audioPlayer.setFilePath(widget.storyItem.audioConfig!.audioPath);
-          break;
-      }
-      await audioPlayer.play();
-      widget.onAudioLoaded?.call(audioPlayer);
-    }
-  }
-
-  @override
-  void dispose() {
-    audioPlayer.pause();
-    audioPlayer.dispose();
-    super.dispose();
+    widget.onTextStoryLoaded?.call(true);
   }
 
   @override

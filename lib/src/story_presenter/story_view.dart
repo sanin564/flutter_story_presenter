@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_story_presenter/src/story_presenter/story_custom_view_wrapper.dart';
-import 'package:just_audio/just_audio.dart';
 import '../story_presenter/story_view_indicator.dart';
 import '../models/story_item.dart';
 import '../models/story_view_indicator_config.dart';
@@ -23,8 +22,7 @@ typedef OnRightTap = Future<bool> Function();
 typedef OnDrag = void Function();
 typedef OnItemBuild = Widget? Function(int, Widget);
 typedef OnVideoLoad = void Function(VideoPlayerController?);
-typedef OnAudioLoaded = void Function(AudioPlayer);
-typedef CustomViewBuilder = Widget Function(AudioPlayer);
+typedef CustomViewBuilder = Widget Function();
 typedef OnSlideDown = void Function(DragUpdateDetails);
 typedef OnSlideStart = void Function(DragStartDetails);
 typedef OnPause = Future<bool> Function();
@@ -123,10 +121,6 @@ class _StoryPresenterState extends State<StoryPresenter>
   Animation? _currentProgressAnimation;
   double currentItemProgress = 0;
   VideoPlayerController? _currentVideoPlayer;
-  AudioPlayer? _audioPlayer;
-  Duration? _totalAudioDuration;
-  StreamSubscription? _audioDurationSubscriptionStream;
-  StreamSubscription? _audioPlayerStateStream;
 
   late final StoryController _storyController;
   late final PageController pageController;
@@ -177,7 +171,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     _disposeStoryController();
     _animationController.dispose();
 
-    _audioDurationSubscriptionStream?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -206,7 +199,6 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _storyControllerListener() {
     /// Resumes the media playback.
     void resumeMedia() {
-      _audioPlayer?.play();
       _currentVideoPlayer?.play();
       if (_currentProgressAnimation != null) {
         _forwardAnimation(from: _currentProgressAnimation!.value);
@@ -215,7 +207,6 @@ class _StoryPresenterState extends State<StoryPresenter>
 
     /// Pauses the media playback.
     void pauseMedia() {
-      _audioPlayer?.pause();
       _currentVideoPlayer?.pause();
       _animationController.stop(canceled: false);
     }
@@ -238,12 +229,6 @@ class _StoryPresenterState extends State<StoryPresenter>
 
     /// Plays the previous story item.
     void playPrevious() {
-      if (_audioPlayer != null) {
-        _audioPlayer?.dispose();
-        _audioDurationSubscriptionStream?.cancel();
-        _audioPlayerStateStream?.cancel();
-      }
-
       if (_storyController.page == 0) {
         _resetAnimation();
         _startStoryCountdown();
@@ -313,36 +298,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     if (currentItem.storyItemType.isVideo) {
       return;
     }
-    if (currentItem.audioConfig != null) {
-      _audioPlayer?.durationFuture?.then((v) {
-        _totalAudioDuration = v;
-
-        _animationController.duration = v;
-
-        _currentProgressAnimation =
-            Tween<double>(begin: 0, end: 1).animate(_animationController)
-              ..addListener(animationListener)
-              ..addStatusListener(animationStatusListener);
-
-        _forwardAnimation();
-      });
-      _audioDurationSubscriptionStream =
-          _audioPlayer?.positionStream.listen(audioPositionListener);
-      _audioPlayerStateStream = _audioPlayer?.playerStateStream.listen(
-        (event) {
-          if (event.playing) {
-            if (event.processingState == ProcessingState.loading) {
-              _storyController.pause();
-            } else {
-              _storyController.play();
-            }
-          }
-        },
-      );
-
-      return;
-    }
-
     _animationController.duration = currentItem.duration;
 
     _currentProgressAnimation =
@@ -351,16 +306,6 @@ class _StoryPresenterState extends State<StoryPresenter>
           ..addStatusListener(animationStatusListener);
 
     _forwardAnimation();
-  }
-
-  void audioPositionListener(Duration position) {
-    final dur = position.inMilliseconds;
-    final pos = _totalAudioDuration?.inMilliseconds;
-
-    if (pos == dur) {
-      _storyController.next();
-      return;
-    }
   }
 
   /// Listener for the animation progress.
@@ -397,11 +342,6 @@ class _StoryPresenterState extends State<StoryPresenter>
                   onImageLoaded: (isLoaded) {
                     _startStoryCountdown();
                   },
-                  onAudioLoaded: (audioPlayer) {
-                    _audioPlayer = audioPlayer;
-
-                    _startStoryCountdown();
-                  },
                 );
 
               case StoryItemType.video:
@@ -427,10 +367,6 @@ class _StoryPresenterState extends State<StoryPresenter>
                   onTextStoryLoaded: (loaded) {
                     _startStoryCountdown();
                   },
-                  onAudioLoaded: (audioPlayer) {
-                    _audioPlayer = audioPlayer;
-                    _startStoryCountdown();
-                  },
                 );
 
               case StoryItemType.web:
@@ -452,17 +388,12 @@ class _StoryPresenterState extends State<StoryPresenter>
                 return StoryCustomWidgetWrapper(
                   isAutoStart: true,
                   key: UniqueKey(),
-                  builder: (audioPlayer) {
-                    return item.customWidget!(
-                            widget.storyController, audioPlayer) ??
+                  builder: () {
+                    return item.customWidget!(widget.storyController) ??
                         const SizedBox.shrink();
                   },
                   storyItem: item,
                   onLoaded: () {
-                    _startStoryCountdown();
-                  },
-                  onAudioLoaded: (audioPlayer) {
-                    _audioPlayer = audioPlayer;
                     _startStoryCountdown();
                   },
                 );
