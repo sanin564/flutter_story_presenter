@@ -78,7 +78,6 @@ class _VideoStoryViewState extends State<VideoStoryView> {
       if (controller != null) {
         widget.onVisibilityChanged?.call(controller!, false);
       }
-      await controller?.play();
       await controller?.setLooping(widget.looping ?? false);
       await controller?.setVolume(storyItem.isMuteByDefault ? 0 : 1);
     } catch (e) {
