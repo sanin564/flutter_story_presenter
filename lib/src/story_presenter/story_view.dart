@@ -28,13 +28,15 @@ typedef OnPause = Future<bool> Function();
 typedef OnResume = Future<bool> Function();
 typedef IndicatorWrapper = Widget Function(Widget child);
 typedef CommonBuilder = Widget Function(BuildContext context, int index);
+typedef StoryBuilder = StoryItem Function(BuildContext context, int index);
 
 final durationNotifier = ValueNotifier(const Duration(seconds: 5));
 
 class StoryPresenter extends StatefulWidget {
   const StoryPresenter({
     this.storyController,
-    this.items = const [],
+    required this.itemBuilder,
+    required this.itemCount,
     this.onStoryChanged,
     this.onLeftTap,
     this.onRightTap,
@@ -53,7 +55,10 @@ class StoryPresenter extends StatefulWidget {
   });
 
   /// List of StoryItem objects to display in the story view.
-  final List<StoryItem> items;
+  final int itemCount;
+
+  /// item builder
+  final StoryBuilder itemBuilder;
 
   /// Controller for managing the current playing media.
   final StoryController? storyController;
@@ -182,9 +187,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     }
   }
 
-  /// Returns the current story item.
-  StoryItem get currentItem => widget.items[_storyController.page];
-
   /// Returns the configuration for the story view indicator.
   StoryViewIndicatorConfig get storyViewIndicatorConfig =>
       widget.storyViewIndicatorConfig ?? const StoryViewIndicatorConfig();
@@ -205,7 +207,7 @@ class _StoryPresenterState extends State<StoryPresenter>
 
     /// Plays the next story item.
     void playNext() async {
-      if (_storyController.page == widget.items.length - 1) {
+      if (_storyController.page == widget.itemCount - 1) {
         await widget.onCompleted?.call();
         return;
       } else {
@@ -299,9 +301,9 @@ class _StoryPresenterState extends State<StoryPresenter>
         _currentVideoPlayer?.seekTo(Duration.zero);
         widget.onStoryChanged?.call(index);
       },
-      itemCount: widget.items.length,
+      itemCount: widget.itemCount,
       itemBuilder: (context, index) {
-        final item = widget.items[index];
+        final item = widget.itemBuilder(context, index);
 
         return Stack(
           fit: StackFit.expand,
@@ -421,7 +423,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                   return StoryViewIndicator(
                     currentIndex: index,
                     currentItemAnimatedValue: _animationController.value,
-                    totalItems: widget.items.length,
+                    totalItems: widget.itemCount,
                     storyViewIndicatorConfig: storyViewIndicatorConfig,
                   );
                 },

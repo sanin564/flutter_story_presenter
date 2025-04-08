@@ -243,7 +243,10 @@ class _MyStoryViewState extends State<MyStoryView> {
 
     return StoryPresenter(
       storyController: controller,
-      items: widget.storyModel.stories,
+      itemCount: widget.storyModel.stories.length,
+      itemBuilder: (context, index) {
+        return widget.storyModel.stories[index];
+      },
       storyViewIndicatorConfig: storyViewIndicatorConfig,
       headerBuilder: (context, index) {
         return ProfileView(storyModel: widget.storyModel);
