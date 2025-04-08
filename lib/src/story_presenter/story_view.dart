@@ -302,6 +302,7 @@ class _StoryPresenterState extends State<StoryPresenter>
         _resetAnimation();
         _currentVideoPlayer?.pause();
         _currentVideoPlayer?.seekTo(Duration.zero);
+        _currentVideoPlayer = null;
         widget.onStoryChanged?.call(index);
       },
       itemCount: widget.itemCount,
