@@ -356,9 +356,9 @@ class _StoryPresenterState extends State<StoryPresenter>
           key: UniqueKey(),
           looping: false,
           onVisibilityChanged: (videoPlayer, isvisible) {
-            if (isvisible && videoPlayer != null) {
+            if (isvisible && videoPlayer?.value.isInitialized == true) {
               _currentVideoPlayer = videoPlayer;
-              videoPlayer.play();
+              videoPlayer!.play();
 
               _startStoryCountdown(videoPlayer.value.duration);
             } else {
