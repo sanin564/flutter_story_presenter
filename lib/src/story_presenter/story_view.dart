@@ -118,7 +118,6 @@ class StoryPresenter extends StatefulWidget {
 class _StoryPresenterState extends State<StoryPresenter>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  Animation<double>? _currentProgressAnimation;
   VideoPlayerController? _currentVideoPlayer;
 
   late final StoryController _storyController;
@@ -199,9 +198,7 @@ class _StoryPresenterState extends State<StoryPresenter>
     /// Resumes the media playback.
     void resumeMedia() {
       _currentVideoPlayer?.play();
-      if (_currentProgressAnimation != null) {
-        _forwardAnimation(from: _currentProgressAnimation!.value);
-      }
+      _forwardAnimation(from: _animationController.value);
     }
 
     /// Pauses the media playback.
@@ -283,9 +280,8 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _startStoryCountdown(Duration duration) {
     _animationController.duration = duration;
 
-    _currentProgressAnimation = Tween<double>(begin: 0, end: 1)
-        .animate(_animationController)
-      ..addStatusListener(animationStatusListener);
+    Tween<double>(begin: 0, end: 1).animate(_animationController);
+    _animationController.addStatusListener(animationStatusListener);
 
     _forwardAnimation();
   }
@@ -428,16 +424,14 @@ class _StoryPresenterState extends State<StoryPresenter>
                         animation: _animationController,
                         builder: (context, child) => StoryViewIndicator(
                           currentIndex: _storyController.page,
-                          currentItemAnimatedValue:
-                              _currentProgressAnimation?.value ?? 0,
+                          currentItemAnimatedValue: _animationController.value,
                           totalItems: widget.items.length,
                           storyViewIndicatorConfig: storyViewIndicatorConfig,
                         ),
                       )
                     : StoryViewIndicator(
                         currentIndex: index,
-                        currentItemAnimatedValue:
-                            _currentProgressAnimation?.value ?? 0,
+                        currentItemAnimatedValue: _animationController.value,
                         totalItems: widget.items.length,
                         storyViewIndicatorConfig: storyViewIndicatorConfig,
                       ),
