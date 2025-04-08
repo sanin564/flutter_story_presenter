@@ -191,12 +191,18 @@ class _StoryPresenterState extends State<StoryPresenter>
   StoryViewIndicatorConfig get storyViewIndicatorConfig =>
       widget.storyViewIndicatorConfig ?? const StoryViewIndicatorConfig();
 
+  void _forwardAnimation({double? from}) {
+    if (_animationController.duration != null) {
+      _animationController.forward(from: from);
+    }
+  }
+
   /// Listener for the story controller to handle various story actions.
   void _storyControllerListener() {
     /// Resumes the media playback.
     void resumeMedia() {
       _currentVideoPlayer?.play();
-      _animationController.forward(from: _animationController.value);
+      _forwardAnimation(from: _animationController.value);
     }
 
     /// Pauses the media playback.
@@ -276,7 +282,7 @@ class _StoryPresenterState extends State<StoryPresenter>
     durationNotifier.value = duration;
     _animationController.duration = duration;
     _animationController.addStatusListener(animationStatusListener);
-    _animationController.forward();
+    _forwardAnimation();
   }
 
   /// Listener for the animation status.
