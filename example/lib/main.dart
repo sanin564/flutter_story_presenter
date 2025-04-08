@@ -69,12 +69,6 @@ class _HomeState extends State<Home> {
           ),
         ),
         StoryItem(
-          storyItemType: StoryItemType.custom,
-          customWidget: (p0) => AudioCustomView1(
-            controller: p0,
-          ),
-        ),
-        StoryItem(
           storyItemType: StoryItemType.image,
           url:
               "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800",

@@ -209,7 +209,6 @@ class _StoryPresenterState extends State<StoryPresenter>
     void playNext() async {
       if (_storyController.page == widget.itemCount - 1) {
         await widget.onCompleted?.call();
-        return;
       } else {
         _storyController.page += 1;
         pageController.jumpToPage(_storyController.page);
@@ -272,14 +271,12 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   /// Starts the countdown for the story item duration.
   void _startStoryCountdown(Duration duration) {
-    Future(() {
-      _resetAnimation();
+    _resetAnimation();
 
-      durationNotifier.value = duration;
-      _animationController.duration = duration;
-      _animationController.addStatusListener(animationStatusListener);
-      _animationController.forward();
-    });
+    durationNotifier.value = duration;
+    _animationController.duration = duration;
+    _animationController.addStatusListener(animationStatusListener);
+    _animationController.forward();
   }
 
   /// Listener for the animation status.
