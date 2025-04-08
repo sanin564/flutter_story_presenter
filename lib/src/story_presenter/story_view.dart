@@ -333,7 +333,6 @@ class _StoryPresenterState extends State<StoryPresenter>
                     widget.onVideoLoad?.call(videoPlayer);
                     _startStoryCountdown(videoPlayer.value.duration);
                   },
-                  onEnd: _storyController.next,
                 );
 
               case StoryItemType.text:
