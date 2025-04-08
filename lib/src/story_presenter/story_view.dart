@@ -358,6 +358,7 @@ class _StoryPresenterState extends State<StoryPresenter>
             } else {
               _currentVideoNotifier.value = null;
               videoPlayer?.pause();
+              videoPlayer?.seekTo(Duration.zero);
             }
           },
           onEnd: _storyController.next,
