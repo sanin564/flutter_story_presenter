@@ -18,7 +18,6 @@ class VideoStoryView extends StatefulWidget {
   const VideoStoryView({
     super.key,
     required this.storyItem,
-    this.onVideoLoad,
     this.looping,
     this.onEnd,
     this.onVisibilityChanged,
@@ -26,9 +25,6 @@ class VideoStoryView extends StatefulWidget {
 
   /// The story item containing video data and configuration.
   final StoryItem storyItem;
-
-  /// Callback function to notify when the video is loaded.
-  final OnVideoLoad? onVideoLoad;
 
   /// In case of single video story
   final bool? looping;
@@ -80,7 +76,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
       await controller?.initialize();
       videoStatus = VideoStatus.live;
       if (controller != null) {
-        widget.onVideoLoad?.call(controller!);
+        widget.onVisibilityChanged?.call(controller!, false);
       }
       await controller?.play();
       await controller?.setLooping(widget.looping ?? false);

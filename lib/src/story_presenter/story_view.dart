@@ -334,8 +334,8 @@ class _StoryPresenterState extends State<StoryPresenter>
         return ImageStoryView(
           key: UniqueKey(),
           storyItem: item,
-          onImageLoaded: (isLoaded) {
-            if (isLoaded) {
+          onVisibilityChanged: (isVisible, isLoaded) {
+            if (isVisible && isLoaded) {
               _startStoryCountdown(item.duration);
             }
           },
@@ -346,11 +346,6 @@ class _StoryPresenterState extends State<StoryPresenter>
           storyItem: item,
           key: UniqueKey(),
           looping: false,
-          onVideoLoad: (videoPlayer) {
-            _currentVideoNotifier.value = videoPlayer;
-            widget.onVideoLoad?.call(videoPlayer);
-            _startStoryCountdown(videoPlayer.value.duration);
-          },
           onVisibilityChanged: (videoPlayer, isvisible) {
             if (isvisible) {
               _currentVideoNotifier.value = videoPlayer;
@@ -368,8 +363,8 @@ class _StoryPresenterState extends State<StoryPresenter>
         return TextStoryView(
           storyItem: item,
           key: UniqueKey(),
-          onTextStoryLoaded: (loaded) {
-            if (loaded) {
+          onVisibilityChanged: (isLoaded, isVisible) {
+            if (isLoaded && isVisible) {
               _startStoryCountdown(item.duration);
             }
           },
