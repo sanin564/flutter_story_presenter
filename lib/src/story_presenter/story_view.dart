@@ -118,8 +118,7 @@ class StoryPresenter extends StatefulWidget {
 class _StoryPresenterState extends State<StoryPresenter>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   late AnimationController _animationController;
-  Animation? _currentProgressAnimation;
-  double currentItemProgress = 0;
+  Animation<double>? _currentProgressAnimation;
   VideoPlayerController? _currentVideoPlayer;
 
   late final StoryController _storyController;
@@ -288,9 +287,7 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _resetAnimation() {
     _animationController.reset();
     _forwardAnimation();
-    _animationController
-      ..removeListener(animationListener)
-      ..removeStatusListener(animationStatusListener);
+    _animationController.removeStatusListener(animationStatusListener);
   }
 
   /// Starts the countdown for the story item duration.
@@ -300,17 +297,11 @@ class _StoryPresenterState extends State<StoryPresenter>
     }
     _animationController.duration = currentItem.duration;
 
-    _currentProgressAnimation =
-        Tween<double>(begin: 0, end: 1).animate(_animationController)
-          ..addListener(animationListener)
-          ..addStatusListener(animationStatusListener);
+    _currentProgressAnimation = Tween<double>(begin: 0, end: 1)
+        .animate(_animationController)
+      ..addStatusListener(animationStatusListener);
 
     _forwardAnimation();
-  }
-
-  /// Listener for the animation progress.
-  void animationListener() {
-    currentItemProgress = _animationController.value;
   }
 
   /// Listener for the animation status.
@@ -428,7 +419,8 @@ class _StoryPresenterState extends State<StoryPresenter>
                                 animation: _animationController,
                                 builder: (context, child) => StoryViewIndicator(
                                   currentIndex: _storyController.page,
-                                  currentItemAnimatedValue: currentItemProgress,
+                                  currentItemAnimatedValue:
+                                      _currentProgressAnimation?.value ?? 0,
                                   totalItems: widget.items.length,
                                   storyViewIndicatorConfig:
                                       storyViewIndicatorConfig,
@@ -436,7 +428,8 @@ class _StoryPresenterState extends State<StoryPresenter>
                               )
                             : StoryViewIndicator(
                                 currentIndex: _storyController.page,
-                                currentItemAnimatedValue: currentItemProgress,
+                                currentItemAnimatedValue:
+                                    _currentProgressAnimation?.value ?? 0,
                                 totalItems: widget.items.length,
                                 storyViewIndicatorConfig:
                                     storyViewIndicatorConfig,
