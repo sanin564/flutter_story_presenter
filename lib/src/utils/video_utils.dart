@@ -64,3 +64,12 @@ class VideoUtils {
     );
   }
 }
+
+enum VideoStatus {
+  loading,
+  error,
+  live;
+
+  bool get hasError => this == error;
+  bool get isLive => this == live;
+}

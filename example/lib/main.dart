@@ -50,33 +50,28 @@ class _HomeState extends State<Home> {
           storyItemType: StoryItemType.video,
           storyItemSource: StoryItemSource.asset,
           url: 'assets/fb8512a35d6f4b2e8917b74a048de71a.MP4',
-          thumbnail: const Center(
-              child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CupertinoActivityIndicator(
-                radius: 15,
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Text('Video Loading')
-            ],
-          )),
           videoConfig: const StoryViewVideoConfig(
             fit: BoxFit.cover,
+            loadingWidget: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CupertinoActivityIndicator(
+                    radius: 15,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text('Video Loading')
+                ],
+              ),
+            ),
           ),
         ),
         StoryItem(
           storyItemType: StoryItemType.custom,
-          audioConfig: StoryViewAudioConfig(
-            audioPath: 'https://audios.ftcdn.net/08/98/82/47/48K_898824706.m4a',
-            source: StoryItemSource.network,
-            onAudioStart: (p0) {},
-          ),
-          customWidget: (p0, audioPlayer) => AudioCustomView1(
+          customWidget: (p0) => AudioCustomView1(
             controller: p0,
-            audioPlayer: audioPlayer,
           ),
         ),
         StoryItem(
@@ -123,18 +118,6 @@ class _HomeState extends State<Home> {
                     ])),
               )),
           url: "Happy Independence Day",
-        ),
-        StoryItem(
-          storyItemType: StoryItemType.web,
-          url:
-              'https://www.ndtv.com/webstories/travel/10-things-to-do-in-amritsar-from-golden-temple-visit-to-wagah-border-47',
-          duration: const Duration(seconds: 20),
-          imageConfig: StoryViewImageConfig(
-            fit: BoxFit.contain,
-            progressIndicatorBuilder: (p0, p1, p2) => const Center(
-              child: CupertinoActivityIndicator(),
-            ),
-          ),
         ),
       ],
     ),
@@ -234,11 +217,11 @@ class MyStoryView extends StatefulWidget {
 }
 
 class _MyStoryViewState extends State<MyStoryView> {
-  late FlutterStoryController controller;
+  late StoryController controller;
 
   @override
   void initState() {
-    controller = FlutterStoryController();
+    controller = StoryController();
     super.initState();
   }
 
@@ -253,16 +236,15 @@ class _MyStoryViewState extends State<MyStoryView> {
       height: 4,
       activeColor: Colors.white,
       backgroundCompletedColor: Colors.white,
-      backgroundDisabledColor: Colors.white.withOpacity(0.5),
+      backgroundDisabledColor: Colors.white.withValues(alpha: 0.5),
       horizontalGap: 1,
       borderRadius: 1.5,
     );
 
-    return FlutterStoryPresenter(
-      flutterStoryController: controller,
+    return StoryPresenter(
+      storyController: controller,
       items: widget.storyModel.stories,
       storyViewIndicatorConfig: storyViewIndicatorConfig,
-      initialIndex: 0,
       headerWidget: ProfileView(storyModel: widget.storyModel),
       onLeftTap: () async {
         /// do some work here
@@ -282,7 +264,7 @@ class _MyStoryViewState extends State<MyStoryView> {
         await widget.pageController.nextPage(
             duration: const Duration(milliseconds: 500),
             curve: Curves.decelerate);
-        controller = FlutterStoryController();
+        controller = StoryController();
       },
     );
   }
@@ -385,7 +367,7 @@ class StoryModel {
 class TextOverlayView extends StatelessWidget {
   const TextOverlayView({super.key, required this.controller});
 
-  final FlutterStoryController? controller;
+  final StoryController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -410,7 +392,7 @@ class TextOverlayView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 10,
                         spreadRadius: 0,
                       )
@@ -434,7 +416,7 @@ class TextOverlayView extends StatelessWidget {
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -453,7 +435,7 @@ class TextOverlayView extends StatelessWidget {
                           decoration: InputDecoration(
                               hintText: 'Type something...',
                               hintStyle: TextStyle(
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                               ),
                               border: InputBorder.none),
                         ),
@@ -472,7 +454,7 @@ class TextOverlayView extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                         )
                       ]),
@@ -496,7 +478,7 @@ class TextOverlayView extends StatelessWidget {
 class PostOverlayView extends StatelessWidget {
   const PostOverlayView({super.key, required this.controller});
 
-  final FlutterStoryController? controller;
+  final StoryController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -515,7 +497,7 @@ class PostOverlayView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 0,
                     spreadRadius: 0,
                   )
@@ -598,7 +580,7 @@ class AudioCustomView1 extends StatelessWidget {
   const AudioCustomView1(
       {super.key, required this.controller, this.audioPlayer});
 
-  final FlutterStoryController? controller;
+  final StoryController? controller;
   final AudioPlayer? audioPlayer;
 
   @override
@@ -622,7 +604,7 @@ class AudioCustomView1 extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 10,
                 )
               ],
@@ -651,7 +633,7 @@ class AudioCustomView1 extends StatelessWidget {
                           return Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              color: Colors.black.withOpacity(0.54),
+                              color: Colors.black.withValues(alpha: 0.54),
                             ),
                             height: 50,
                             width: 50,
@@ -681,7 +663,7 @@ class AudioCustomView1 extends StatelessWidget {
                       Text(
                         "Andy grammer",
                         style: TextStyle(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

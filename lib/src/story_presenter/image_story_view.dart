@@ -1,11 +1,10 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_story_presenter/flutter_story_presenter.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
-typedef OnImageLoaded = void Function(bool);
+typedef OnImageVisibilityChanged = void Function(bool isVisible, bool isLoaded);
 
 /// A widget that displays an image from various sources (asset, file, network) in a story view.
 /// Notifies when the image is loaded via the [onImageLoaded] callback.
@@ -13,16 +12,11 @@ class ImageStoryView extends StatefulWidget {
   /// The story item containing image data and configuration.
   final StoryItem storyItem;
 
-  /// Callback function to notify when the image is loaded.
-  final OnImageLoaded? onImageLoaded;
-
-  /// Callback function to notify when the audio is loaded.
-  final OnAudioLoaded? onAudioLoaded;
+  final OnImageVisibilityChanged? onVisibilityChanged;
 
   const ImageStoryView({
     required this.storyItem,
-    this.onImageLoaded,
-    this.onAudioLoaded,
+    this.onVisibilityChanged,
     super.key,
   });
 
@@ -32,60 +26,25 @@ class ImageStoryView extends StatefulWidget {
 
 class _ImageStoryViewState extends State<ImageStoryView> {
   /// A flag to ensure the [widget.onImageLoaded] callback is called only once.
-  bool _calledOnImageLoaded = false;
-
-  AudioPlayer audioPlayer = AudioPlayer();
+  bool _isImageLoaded = false;
 
   /// Marks the image as loaded and calls the [widget.onImageLoaded] callback if it hasn't been called already.
   void markImageAsLoaded() {
-    if (!_calledOnImageLoaded) {
-      _calledOnImageLoaded = true;
-      if (widget.storyItem.audioConfig == null) {
-        widget.onImageLoaded?.call(true);
-      } else {
-        audioInit();
-      }
+    if (!_isImageLoaded) {
+      _isImageLoaded = true;
+      widget.onVisibilityChanged?.call(false, true);
     }
-  }
-
-  Future<void> audioInit() async {
-    try {
-      if (widget.storyItem.audioConfig != null) {
-        switch (widget.storyItem.audioConfig!.source) {
-          case StoryItemSource.asset:
-            await audioPlayer.setAsset(widget.storyItem.audioConfig!.audioPath);
-            break;
-          case StoryItemSource.network:
-            await audioPlayer.setUrl(widget.storyItem.audioConfig!.audioPath);
-            break;
-          case StoryItemSource.file:
-            await audioPlayer
-                .setFilePath(widget.storyItem.audioConfig!.audioPath);
-            break;
-        }
-        audioPlayer.play();
-        widget.onAudioLoaded?.call(audioPlayer);
-      }
-    } catch (e) {
-      widget.onImageLoaded?.call(true);
-      log("$e");
-    }
-  }
-
-  @override
-  void dispose() {
-    audioPlayer.pause();
-    audioPlayer.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final imageConfig = widget.storyItem.imageConfig;
 
+    Widget child;
+
     /// If the image source is an asset, use [AssetImage].
     if (widget.storyItem.storyItemSource.isAsset) {
-      return Image(
+      child = Image(
         image: AssetImage(widget.storyItem.url!),
         height: imageConfig?.height,
         fit: imageConfig?.fit,
@@ -115,7 +74,7 @@ class _ImageStoryViewState extends State<ImageStoryView> {
 
     /// If the image source is a file, use [FileImage].
     else if (widget.storyItem.storyItemSource.isFile) {
-      return Image(
+      child = Image(
         image: FileImage(File(widget.storyItem.url!)),
         height: imageConfig?.height,
         fit: imageConfig?.fit,
@@ -144,7 +103,7 @@ class _ImageStoryViewState extends State<ImageStoryView> {
     }
 
     /// If the image source is a network URL, use [CachedNetworkImage].
-    return CachedNetworkImage(
+    child = CachedNetworkImage(
       imageUrl: widget.storyItem.url!,
       imageBuilder: (context, imageProvider) {
         // Mark the image as loaded once it is built.
@@ -164,6 +123,18 @@ class _ImageStoryViewState extends State<ImageStoryView> {
         return const SizedBox.shrink();
       },
       progressIndicatorBuilder: imageConfig?.progressIndicatorBuilder,
+    );
+
+    return VisibilityDetector(
+      key: UniqueKey(),
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction == 0) {
+          widget.onVisibilityChanged?.call(false, _isImageLoaded);
+        } else if (info.visibleFraction == 1) {
+          widget.onVisibilityChanged?.call(true, _isImageLoaded);
+        }
+      },
+      child: child,
     );
   }
 }

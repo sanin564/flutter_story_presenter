@@ -1,44 +1,52 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_story_presenter/flutter_story_presenter.dart';
 import 'package:video_player/video_player.dart';
-import '../models/story_item.dart';
-import '../story_presenter/story_view.dart';
-import '../utils/story_utils.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../utils/video_utils.dart';
 
 /// A widget that displays a video story view, supporting different video sources
 /// (network, file, asset) and optional thumbnail and error widgets.
+///
+
+typedef OnVisibilityChanged = void Function(
+    VideoPlayerController? videoPlayer, bool isvisible);
+
 class VideoStoryView extends StatefulWidget {
   /// Creates a [VideoStoryView] widget.
   const VideoStoryView({
-    required this.storyItem,
-    this.onVideoLoad,
-    this.looping,
     super.key,
+    required this.storyItem,
+    this.looping,
+    this.onEnd,
+    this.onVisibilityChanged,
   });
 
   /// The story item containing video data and configuration.
   final StoryItem storyItem;
 
-  /// Callback function to notify when the video is loaded.
-  final OnVideoLoad? onVideoLoad;
-
   /// In case of single video story
   final bool? looping;
+  final OnVisibilityChanged? onVisibilityChanged;
+  final VoidCallback? onEnd;
 
   @override
   State<VideoStoryView> createState() => _VideoStoryViewState();
 }
 
 class _VideoStoryViewState extends State<VideoStoryView> {
-  VideoPlayerController? videoPlayerController;
-  bool hasError = false;
+  VideoPlayerController? controller;
+  VideoStatus videoStatus = VideoStatus.loading;
 
   @override
   void initState() {
-    _initialiseVideoPlayer();
     super.initState();
+    _initialiseVideoPlayer().then((_) {
+      if (videoStatus.isLive) {
+        controller?.addListener(videoListener);
+      }
+    });
   }
 
   /// Initializes the video player controller based on the source of the video.
@@ -47,86 +55,109 @@ class _VideoStoryViewState extends State<VideoStoryView> {
       final storyItem = widget.storyItem;
       if (storyItem.storyItemSource.isNetwork) {
         // Initialize video controller for network source.
-        videoPlayerController =
-            await VideoUtils.instance.videoControllerFromUrl(
+        controller = await VideoUtils.instance.videoControllerFromUrl(
           url: storyItem.url!,
           cacheFile: storyItem.videoConfig?.cacheVideo,
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       } else if (storyItem.storyItemSource.isFile) {
         // Initialize video controller for file source.
-        videoPlayerController = VideoUtils.instance.videoControllerFromFile(
+        controller = VideoUtils.instance.videoControllerFromFile(
           file: File(storyItem.url!),
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       } else {
         // Initialize video controller for asset source.
-        videoPlayerController = VideoUtils.instance.videoControllerFromAsset(
+        controller = VideoUtils.instance.videoControllerFromAsset(
           assetPath: storyItem.url!,
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       }
-      await videoPlayerController?.initialize();
-      widget.onVideoLoad?.call(videoPlayerController!);
-      await videoPlayerController?.play();
-      await videoPlayerController?.setLooping(widget.looping ?? false);
-      await videoPlayerController?.setVolume(storyItem.isMuteByDefault ? 0 : 1);
+      await controller?.initialize();
+      videoStatus = VideoStatus.live;
+      if (controller != null) {
+        widget.onVisibilityChanged?.call(controller!, false);
+      }
+      await controller?.play();
+      await controller?.setLooping(widget.looping ?? false);
+      await controller?.setVolume(storyItem.isMuteByDefault ? 0 : 1);
     } catch (e) {
-      hasError = true;
+      videoStatus = VideoStatus.error;
       debugPrint('$e');
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
-  BoxFit get fit => widget.storyItem.videoConfig?.fit ?? BoxFit.cover;
+  void videoListener() {
+    final pos = controller?.value.position ?? Duration.zero;
+    final dur = controller?.value.duration ?? Duration.zero;
+    if (pos >= dur) {
+      widget.onEnd?.call();
+    }
+  }
+
+  BoxFit get fit => config.fit ?? BoxFit.cover;
+
+  StoryViewVideoConfig get config =>
+      widget.storyItem.videoConfig ?? const StoryViewVideoConfig();
 
   @override
   void dispose() {
-    videoPlayerController?.dispose();
+    if (videoStatus.isLive) {
+      controller?.removeListener(videoListener);
+      controller?.dispose();
+      controller = null;
+    }
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
-      fit: (fit == BoxFit.cover) ? StackFit.expand : StackFit.loose,
-      children: [
-        if (widget.storyItem.videoConfig?.loadingWidget != null) ...{
-          widget.storyItem.videoConfig!.loadingWidget!,
-        } else if (widget.storyItem.thumbnail != null) ...{
-          // Display the thumbnail if provided.
-          widget.storyItem.thumbnail!,
-        },
-        if (widget.storyItem.errorWidget != null && hasError) ...{
-          // Display the error widget if an error occurred.
-          widget.storyItem.errorWidget!,
-        },
-        if (videoPlayerController != null) ...{
-          if (widget.storyItem.videoConfig?.useVideoAspectRatio ?? false) ...{
-            // Display the video with aspect ratio if specified.
-            AspectRatio(
-              aspectRatio: videoPlayerController!.value.aspectRatio,
-              child: VideoPlayer(
-                videoPlayerController!,
-              ),
-            )
-          } else ...{
-            // Display the video fitted to the screen.
-            FittedBox(
-              fit: widget.storyItem.videoConfig?.fit ?? BoxFit.cover,
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: widget.storyItem.videoConfig?.width ??
-                    videoPlayerController!.value.size.width,
-                height: widget.storyItem.videoConfig?.height ??
-                    videoPlayerController!.value.size.height,
-                child: VideoPlayer(videoPlayerController!),
-              ),
-            )
-          },
+    return VisibilityDetector(
+      key: UniqueKey(),
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction == 1) {
+          widget.onVisibilityChanged?.call(controller, true);
+        } else if (info.visibleFraction == 0) {
+          widget.onVisibilityChanged?.call(controller, false);
         }
-      ],
+      },
+      child: Stack(
+        alignment:
+            (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
+        fit: (fit == BoxFit.cover) ? StackFit.expand : StackFit.loose,
+        children: [
+          if (config.loadingWidget != null) ...{
+            config.loadingWidget!,
+          },
+          if (widget.storyItem.errorWidget != null && videoStatus.hasError) ...{
+            // Display the error widget if an error occurred.
+            widget.storyItem.errorWidget!,
+          },
+          if (videoStatus.isLive && controller != null) ...{
+            if (config.useVideoAspectRatio) ...{
+              // Display the video with aspect ratio if specified.
+              AspectRatio(
+                aspectRatio: controller!.value.aspectRatio,
+                child: VideoPlayer(controller!),
+              )
+            } else ...{
+              // Display the video fitted to the screen.
+              FittedBox(
+                fit: config.fit ?? BoxFit.cover,
+                alignment: Alignment.center,
+                child: SizedBox(
+                    width: config.width ?? controller?.value.size.width,
+                    height: config.height ?? controller?.value.size.height,
+                    child: VideoPlayer(controller!)),
+              )
+            },
+          }
+        ],
+      ),
     );
   }
 }
