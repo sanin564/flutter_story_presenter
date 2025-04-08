@@ -1,14 +1,18 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_story_presenter/flutter_story_presenter.dart';
 import 'package:video_player/video_player.dart';
-import '../models/story_item.dart';
-import '../story_presenter/story_view.dart';
-import '../utils/story_utils.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../utils/video_utils.dart';
 
 /// A widget that displays a video story view, supporting different video sources
 /// (network, file, asset) and optional thumbnail and error widgets.
+///
+
+typedef OnVisibilityChanged = void Function(
+    VideoPlayerController? videoPlayer, bool isvisible);
+
 class VideoStoryView extends StatefulWidget {
   /// Creates a [VideoStoryView] widget.
   const VideoStoryView({
@@ -17,6 +21,7 @@ class VideoStoryView extends StatefulWidget {
     this.onVideoLoad,
     this.looping,
     this.onEnd,
+    this.onVisibilityChanged,
   });
 
   /// The story item containing video data and configuration.
@@ -27,7 +32,7 @@ class VideoStoryView extends StatefulWidget {
 
   /// In case of single video story
   final bool? looping;
-
+  final OnVisibilityChanged? onVisibilityChanged;
   final VoidCallback? onEnd;
 
   @override
@@ -35,7 +40,7 @@ class VideoStoryView extends StatefulWidget {
 }
 
 class _VideoStoryViewState extends State<VideoStoryView> {
-  late final VideoPlayerController controller;
+  VideoPlayerController? controller;
   VideoStatus videoStatus = VideoStatus.loading;
 
   @override
@@ -43,7 +48,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
     super.initState();
     _initialiseVideoPlayer().then((_) {
       if (videoStatus.isLive) {
-        controller.addListener(videoListener);
+        controller?.addListener(videoListener);
       }
     });
   }
@@ -72,12 +77,14 @@ class _VideoStoryViewState extends State<VideoStoryView> {
           videoPlayerOptions: storyItem.videoConfig?.videoPlayerOptions,
         );
       }
-      await controller.initialize();
+      await controller?.initialize();
       videoStatus = VideoStatus.live;
-      widget.onVideoLoad?.call(controller);
-      await controller.play();
-      await controller.setLooping(widget.looping ?? false);
-      await controller.setVolume(storyItem.isMuteByDefault ? 0 : 1);
+      if (controller != null) {
+        widget.onVideoLoad?.call(controller!);
+      }
+      await controller?.play();
+      await controller?.setLooping(widget.looping ?? false);
+      await controller?.setVolume(storyItem.isMuteByDefault ? 0 : 1);
     } catch (e) {
       videoStatus = VideoStatus.error;
       debugPrint('$e');
@@ -88,18 +95,23 @@ class _VideoStoryViewState extends State<VideoStoryView> {
   }
 
   void videoListener() {
-    if (controller.value.position >= controller.value.duration) {
+    final pos = controller?.value.position ?? Duration.zero;
+    final dur = controller?.value.duration ?? Duration.zero;
+    if (pos >= dur) {
       widget.onEnd?.call();
     }
   }
 
-  BoxFit get fit => widget.storyItem.videoConfig?.fit ?? BoxFit.cover;
+  BoxFit get fit => config.fit ?? BoxFit.cover;
+
+  StoryViewVideoConfig get config =>
+      widget.storyItem.videoConfig ?? const StoryViewVideoConfig();
 
   @override
   void dispose() {
     if (videoStatus.isLive) {
-      controller.removeListener(videoListener);
-      controller.dispose();
+      controller?.removeListener(videoListener);
+      controller?.dispose();
     }
 
     super.dispose();
@@ -107,42 +119,48 @@ class _VideoStoryViewState extends State<VideoStoryView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
-      fit: (fit == BoxFit.cover) ? StackFit.expand : StackFit.loose,
-      children: [
-        if (widget.storyItem.videoConfig?.loadingWidget != null) ...{
-          widget.storyItem.videoConfig!.loadingWidget!,
-        },
-        if (widget.storyItem.errorWidget != null && videoStatus.hasError) ...{
-          // Display the error widget if an error occurred.
-          widget.storyItem.errorWidget!,
-        },
-        if (videoStatus == VideoStatus.live) ...{
-          if (widget.storyItem.videoConfig?.useVideoAspectRatio ?? false) ...{
-            // Display the video with aspect ratio if specified.
-            AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
-              child: VideoPlayer(
-                controller,
-              ),
-            )
-          } else ...{
-            // Display the video fitted to the screen.
-            FittedBox(
-              fit: widget.storyItem.videoConfig?.fit ?? BoxFit.cover,
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: widget.storyItem.videoConfig?.width ??
-                    controller.value.size.width,
-                height: widget.storyItem.videoConfig?.height ??
-                    controller.value.size.height,
-                child: VideoPlayer(controller),
-              ),
-            )
-          },
+    return VisibilityDetector(
+      key: UniqueKey(),
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction == 1) {
+          widget.onVisibilityChanged?.call(controller, true);
+        } else if (info.visibleFraction == 0) {
+          widget.onVisibilityChanged?.call(null, false);
         }
-      ],
+      },
+      child: Stack(
+        alignment:
+            (fit == BoxFit.cover) ? Alignment.topCenter : Alignment.center,
+        fit: (fit == BoxFit.cover) ? StackFit.expand : StackFit.loose,
+        children: [
+          if (config.loadingWidget != null) ...{
+            config.loadingWidget!,
+          },
+          if (widget.storyItem.errorWidget != null && videoStatus.hasError) ...{
+            // Display the error widget if an error occurred.
+            widget.storyItem.errorWidget!,
+          },
+          if (videoStatus.isLive && controller != null) ...{
+            if (config.useVideoAspectRatio) ...{
+              // Display the video with aspect ratio if specified.
+              AspectRatio(
+                aspectRatio: controller!.value.aspectRatio,
+                child: VideoPlayer(controller!),
+              )
+            } else ...{
+              // Display the video fitted to the screen.
+              FittedBox(
+                fit: config.fit ?? BoxFit.cover,
+                alignment: Alignment.center,
+                child: SizedBox(
+                    width: config.width ?? controller?.value.size.width,
+                    height: config.height ?? controller?.value.size.height,
+                    child: VideoPlayer(controller!)),
+              )
+            },
+          }
+        ],
+      ),
     );
   }
 }

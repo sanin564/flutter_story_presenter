@@ -1,5 +1,6 @@
 name: flutter_story_presenter
-description: "Flutter package that shows videos, images, and text as a story like Instagram, Whatsapp and other social media platforms"
+description: "Flutter package that shows videos, images, and text as a story
+  like Instagram, Whatsapp and other social media platforms"
 version: 1.0.6
 homepage: https://github.com/devkrest/flutter_story_presenter
 
@@ -8,25 +9,24 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-
+  cached_network_image: ^3.3.1
   flutter:
     sdk: flutter
-  cached_network_image: ^3.3.1
   flutter_cache_manager: ^3.3.1
   flutter_hooks: ^0.20.5
-  video_player: ^2.9.1
   flutter_inappwebview: ^6.0.0
+  video_player: ^2.9.1
+  visibility_detector: ^0.4.0+2
 
 dev_dependencies:
+  flutter_lints: ^3.0.0
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
 # The following section is specific to Flutter packages.
-flutter:
+flutter: null
 
 # To add assets to your package, add an assets section, like this:
 # assets:
@@ -38,7 +38,6 @@ flutter:
 #
 # An image asset can refer to one or more resolution-specific "variants", see
 # https://flutter.dev/assets-and-images/#resolution-aware
-
 # To add custom fonts to your package, add a fonts section here,
 # in this "flutter" section. Each entry in this list should have a
 # "family" key with the font family name, and a "fonts" key with a

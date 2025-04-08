@@ -355,6 +355,9 @@ class _StoryPresenterState extends State<StoryPresenter>
             widget.onVideoLoad?.call(videoPlayer);
             _startStoryCountdown(videoPlayer.value.duration);
           },
+          onVisibilityChanged: (videoPlayer, isvisible) {
+            _currentVideoPlayer = videoPlayer;
+          },
         );
 
       case StoryItemType.text:
