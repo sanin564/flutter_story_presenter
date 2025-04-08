@@ -300,205 +300,212 @@ class _StoryPresenterState extends State<StoryPresenter>
   @override
   Widget build(BuildContext context) {
     final mdSize = MediaQuery.sizeOf(context);
-    return Stack(
-      children: [
-        PageView.builder(
-          controller: pageController,
-          allowImplicitScrolling: true,
-          physics: const NeverScrollableScrollPhysics(),
-          onPageChanged: widget.onStoryChanged,
-          itemCount: widget.items.length,
-          itemBuilder: (context, index) {
-            final item = widget.items[index];
+    return PageView.builder(
+      controller: pageController,
+      allowImplicitScrolling: true,
+      physics: const NeverScrollableScrollPhysics(),
+      onPageChanged: widget.onStoryChanged,
+      itemCount: widget.items.length,
+      itemBuilder: (context, index) {
+        final item = widget.items[index];
 
-            switch (item.storyItemType) {
-              case StoryItemType.image:
-                return ImageStoryView(
-                  key: UniqueKey(),
-                  storyItem: item,
-                  onImageLoaded: (isLoaded) {
-                    if (isLoaded) {
-                      _startStoryCountdown(item.duration);
-                    }
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            _buildContent(context, index, item),
+            _buildProgressBar(context, index, item),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: mdSize.width * .2,
+                height: mdSize.height,
+                child: GestureDetector(
+                  onTap: () async {
+                    final willUserHandle =
+                        await widget.onLeftTap?.call() ?? false;
+                    if (!willUserHandle) _storyController.previous();
                   },
-                );
-
-              case StoryItemType.video:
-                return VideoStoryView(
-                  storyItem: item,
-                  key: UniqueKey(),
-                  looping: false,
-                  onVideoLoad: (videoPlayer) {
-                    _currentVideoPlayer = videoPlayer;
-                    widget.onVideoLoad?.call(videoPlayer);
-                    _startStoryCountdown(videoPlayer.value.duration);
-                  },
-                );
-
-              case StoryItemType.text:
-                return TextStoryView(
-                  storyItem: item,
-                  key: UniqueKey(),
-                  onTextStoryLoaded: (loaded) {
-                    if (loaded) {
-                      _startStoryCountdown(item.duration);
-                    }
-                  },
-                );
-
-              case StoryItemType.web:
-                return WebStoryView(
-                  storyItem: item,
-                  key: UniqueKey(),
-                  onWebViewLoaded: (controller, loaded) {
-                    if (loaded) {
-                      _startStoryCountdown(item.duration);
-                    }
-                    item.webConfig?.onWebViewLoaded?.call(
-                      controller,
-                      loaded,
-                    );
-                  },
-                );
-
-              case StoryItemType.custom:
-                return StoryCustomWidgetWrapper(
-                  isAutoStart: true,
-                  key: UniqueKey(),
-                  builder: () {
-                    return item.customWidget!(widget.storyController) ??
-                        const SizedBox.shrink();
-                  },
-                  storyItem: item,
-                  onLoaded: () {
-                    _startStoryCountdown(item.duration);
-                  },
-                );
-            }
-          },
-        ),
-        Builder(
-          builder: (context) {
-            final child = Align(
-              alignment: storyViewIndicatorConfig.alignment,
-              child: Padding(
-                padding: storyViewIndicatorConfig.margin,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _currentVideoPlayer != null
-                        ? SmoothVideoProgress(
-                            controller: _currentVideoPlayer!,
-                            builder: (context, progress, duration, child) {
-                              return StoryViewIndicator(
-                                currentIndex: _storyController.page,
-                                currentItemAnimatedValue:
-                                    progress.inMilliseconds /
-                                        duration.inMilliseconds,
-                                totalItems: widget.items.length,
-                                storyViewIndicatorConfig:
-                                    storyViewIndicatorConfig,
-                              );
-                            })
-                        : _animationController.duration != null
-                            ? AnimatedBuilder(
-                                animation: _animationController,
-                                builder: (context, child) => StoryViewIndicator(
-                                  currentIndex: _storyController.page,
-                                  currentItemAnimatedValue:
-                                      _currentProgressAnimation?.value ?? 0,
-                                  totalItems: widget.items.length,
-                                  storyViewIndicatorConfig:
-                                      storyViewIndicatorConfig,
-                                ),
-                              )
-                            : StoryViewIndicator(
-                                currentIndex: _storyController.page,
-                                currentItemAnimatedValue:
-                                    _currentProgressAnimation?.value ?? 0,
-                                totalItems: widget.items.length,
-                                storyViewIndicatorConfig:
-                                    storyViewIndicatorConfig,
-                              ),
-                  ],
                 ),
               ),
-            );
-
-            return widget.indicatorWrapper?.call(child) ?? child;
-          },
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: mdSize.width * .2,
-            height: mdSize.height,
-            child: GestureDetector(
-              onTap: () async {
-                final willUserHandle = await widget.onLeftTap?.call() ?? false;
-                if (!willUserHandle) _storyController.previous();
-              },
             ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: SizedBox(
-            width: mdSize.width * .8,
-            height: mdSize.height,
-            child: GestureDetector(
-              onTap: () async {
-                final willUserHandle = await widget.onRightTap?.call() ?? false;
-                if (!willUserHandle) _storyController.next();
-              },
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                width: mdSize.width * .8,
+                height: mdSize.height,
+                child: GestureDetector(
+                  onTap: () async {
+                    final willUserHandle =
+                        await widget.onRightTap?.call() ?? false;
+                    if (!willUserHandle) _storyController.next();
+                  },
+                ),
+              ),
             ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: SizedBox(
-            width: mdSize.width,
-            height: mdSize.height,
-            child: GestureDetector(
-              key: UniqueKey(),
-              onLongPressDown: (details) async {
-                final willUserHandle = await widget.onPause?.call() ?? false;
-                if (!willUserHandle) _storyController.pause();
-              },
-              onLongPressUp: () async {
-                final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _storyController.play();
-              },
-              onLongPressEnd: (details) async {
-                final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _storyController.play();
-              },
-              onLongPressCancel: () async {
-                final willUserHandle = await widget.onResume?.call() ?? false;
-                if (!willUserHandle) _storyController.play();
-              },
-              onVerticalDragStart: widget.onSlideStart?.call,
-              onVerticalDragUpdate: widget.onSlideDown?.call,
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                width: mdSize.width,
+                height: mdSize.height,
+                child: GestureDetector(
+                  key: UniqueKey(),
+                  onLongPressDown: (details) async {
+                    final willUserHandle =
+                        await widget.onPause?.call() ?? false;
+                    if (!willUserHandle) _storyController.pause();
+                  },
+                  onLongPressUp: () async {
+                    final willUserHandle =
+                        await widget.onResume?.call() ?? false;
+                    if (!willUserHandle) _storyController.play();
+                  },
+                  onLongPressEnd: (details) async {
+                    final willUserHandle =
+                        await widget.onResume?.call() ?? false;
+                    if (!willUserHandle) _storyController.play();
+                  },
+                  onLongPressCancel: () async {
+                    final willUserHandle =
+                        await widget.onResume?.call() ?? false;
+                    if (!willUserHandle) _storyController.play();
+                  },
+                  onVerticalDragStart: widget.onSlideStart?.call,
+                  onVerticalDragUpdate: widget.onSlideDown?.call,
+                ),
+              ),
             ),
-          ),
-        ),
-        if (widget.headerWidget != null) ...{
-          Align(
-            alignment: Alignment.topCenter,
-            child: SafeArea(
-              bottom: storyViewIndicatorConfig.enableBottomSafeArea,
-              top: storyViewIndicatorConfig.enableTopSafeArea,
-              child: widget.headerWidget!,
-            ),
-          ),
-        },
-        if (widget.footerWidget != null) ...{
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: widget.footerWidget!,
-          ),
-        },
-      ],
+            if (widget.headerWidget != null) ...{
+              Align(
+                alignment: Alignment.topCenter,
+                child: SafeArea(
+                  bottom: storyViewIndicatorConfig.enableBottomSafeArea,
+                  top: storyViewIndicatorConfig.enableTopSafeArea,
+                  child: widget.headerWidget!,
+                ),
+              ),
+            },
+            if (widget.footerWidget != null) ...{
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: widget.footerWidget!,
+              ),
+            },
+          ],
+        );
+      },
     );
+  }
+
+  Widget _buildContent(BuildContext context, int index, StoryItem item) {
+    switch (item.storyItemType) {
+      case StoryItemType.image:
+        return ImageStoryView(
+          key: UniqueKey(),
+          storyItem: item,
+          onImageLoaded: (isLoaded) {
+            if (isLoaded) {
+              _startStoryCountdown(item.duration);
+            }
+          },
+        );
+
+      case StoryItemType.video:
+        return VideoStoryView(
+          storyItem: item,
+          key: UniqueKey(),
+          looping: false,
+          onVideoLoad: (videoPlayer) {
+            _currentVideoPlayer = videoPlayer;
+            widget.onVideoLoad?.call(videoPlayer);
+            _startStoryCountdown(videoPlayer.value.duration);
+          },
+        );
+
+      case StoryItemType.text:
+        return TextStoryView(
+          storyItem: item,
+          key: UniqueKey(),
+          onTextStoryLoaded: (loaded) {
+            if (loaded) {
+              _startStoryCountdown(item.duration);
+            }
+          },
+        );
+
+      case StoryItemType.web:
+        return WebStoryView(
+          storyItem: item,
+          key: UniqueKey(),
+          onWebViewLoaded: (controller, loaded) {
+            if (loaded) {
+              _startStoryCountdown(item.duration);
+            }
+            item.webConfig?.onWebViewLoaded?.call(
+              controller,
+              loaded,
+            );
+          },
+        );
+
+      case StoryItemType.custom:
+        return StoryCustomWidgetWrapper(
+          isAutoStart: true,
+          key: UniqueKey(),
+          builder: () {
+            return item.customWidget!(widget.storyController) ??
+                const SizedBox.shrink();
+          },
+          storyItem: item,
+          onLoaded: () {
+            _startStoryCountdown(item.duration);
+          },
+        );
+    }
+  }
+
+  Widget _buildProgressBar(BuildContext context, int index, StoryItem item) {
+    final child = Align(
+      alignment: storyViewIndicatorConfig.alignment,
+      child: Padding(
+        padding: storyViewIndicatorConfig.margin,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _currentVideoPlayer != null
+                ? SmoothVideoProgress(
+                    controller: _currentVideoPlayer!,
+                    builder: (context, progress, duration, child) {
+                      return StoryViewIndicator(
+                        currentIndex: _storyController.page,
+                        currentItemAnimatedValue:
+                            progress.inMilliseconds / duration.inMilliseconds,
+                        totalItems: widget.items.length,
+                        storyViewIndicatorConfig: storyViewIndicatorConfig,
+                      );
+                    })
+                : _animationController.duration != null
+                    ? AnimatedBuilder(
+                        animation: _animationController,
+                        builder: (context, child) => StoryViewIndicator(
+                          currentIndex: _storyController.page,
+                          currentItemAnimatedValue:
+                              _currentProgressAnimation?.value ?? 0,
+                          totalItems: widget.items.length,
+                          storyViewIndicatorConfig: storyViewIndicatorConfig,
+                        ),
+                      )
+                    : StoryViewIndicator(
+                        currentIndex: _storyController.page,
+                        currentItemAnimatedValue:
+                            _currentProgressAnimation?.value ?? 0,
+                        totalItems: widget.items.length,
+                        storyViewIndicatorConfig: storyViewIndicatorConfig,
+                      ),
+          ],
+        ),
+      ),
+    );
+
+    return widget.indicatorWrapper?.call(child) ?? child;
   }
 }
