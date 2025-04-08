@@ -21,7 +21,7 @@ typedef OnLeftTap = Future<bool> Function();
 typedef OnRightTap = Future<bool> Function();
 typedef OnDrag = void Function();
 typedef OnItemBuild = Widget? Function(int, Widget);
-typedef OnVideoLoad = void Function(VideoPlayerController?);
+typedef OnVideoLoad = void Function(VideoPlayerController);
 typedef CustomViewBuilder = Widget Function();
 typedef OnSlideDown = void Function(DragUpdateDetails);
 typedef OnSlideStart = void Function(DragStartDetails);
@@ -116,7 +116,7 @@ class StoryPresenter extends StatefulWidget {
 }
 
 class _StoryPresenterState extends State<StoryPresenter>
-    with WidgetsBindingObserver, TickerProviderStateMixin {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   Animation<double>? _currentProgressAnimation;
   VideoPlayerController? _currentVideoPlayer;
@@ -212,6 +212,8 @@ class _StoryPresenterState extends State<StoryPresenter>
 
     /// Plays the next story item.
     void playNext() async {
+      _resetAnimation();
+
       if (_storyController.page == widget.items.length - 1) {
         await widget.onCompleted?.call();
         return;
@@ -219,29 +221,17 @@ class _StoryPresenterState extends State<StoryPresenter>
         _storyController.page += 1;
         pageController.jumpToPage(_storyController.page);
       }
-
-      _resetAnimation();
-      if (mounted) {
-        setState(() {});
-      }
     }
 
     /// Plays the previous story item.
     void playPrevious() {
-      if (_storyController.page == 0) {
-        _resetAnimation();
-        _startStoryCountdown();
-        if (mounted) {
-          setState(() {});
-        }
-        widget.onPreviousCompleted?.call();
-        return;
-      }
-
-      _storyController.page -= 1;
       _resetAnimation();
-      if (mounted) {
-        setState(() {});
+
+      if (_storyController.page == 0) {
+        widget.onPreviousCompleted?.call();
+      } else {
+        _storyController.page -= 1;
+        pageController.jumpToPage(_storyController.page);
       }
     }
 
@@ -286,16 +276,12 @@ class _StoryPresenterState extends State<StoryPresenter>
   /// Resets the animation controller and its listeners.
   void _resetAnimation() {
     _animationController.reset();
-    _forwardAnimation();
     _animationController.removeStatusListener(animationStatusListener);
   }
 
   /// Starts the countdown for the story item duration.
-  void _startStoryCountdown() {
-    if (currentItem.storyItemType.isVideo) {
-      return;
-    }
-    _animationController.duration = currentItem.duration;
+  void _startStoryCountdown(Duration duration) {
+    _animationController.duration = duration;
 
     _currentProgressAnimation = Tween<double>(begin: 0, end: 1)
         .animate(_animationController)
@@ -331,7 +317,9 @@ class _StoryPresenterState extends State<StoryPresenter>
                   key: UniqueKey(),
                   storyItem: item,
                   onImageLoaded: (isLoaded) {
-                    _startStoryCountdown();
+                    if (isLoaded) {
+                      _startStoryCountdown(item.duration);
+                    }
                   },
                 );
 
@@ -343,10 +331,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                   onVideoLoad: (videoPlayer) {
                     _currentVideoPlayer = videoPlayer;
                     widget.onVideoLoad?.call(videoPlayer);
-                    _startStoryCountdown();
-                    if (mounted) {
-                      setState(() {});
-                    }
+                    _startStoryCountdown(videoPlayer.value.duration);
                   },
                   onEnd: _storyController.next,
                 );
@@ -356,7 +341,9 @@ class _StoryPresenterState extends State<StoryPresenter>
                   storyItem: item,
                   key: UniqueKey(),
                   onTextStoryLoaded: (loaded) {
-                    _startStoryCountdown();
+                    if (loaded) {
+                      _startStoryCountdown(item.duration);
+                    }
                   },
                 );
 
@@ -366,7 +353,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                   key: UniqueKey(),
                   onWebViewLoaded: (controller, loaded) {
                     if (loaded) {
-                      _startStoryCountdown();
+                      _startStoryCountdown(item.duration);
                     }
                     item.webConfig?.onWebViewLoaded?.call(
                       controller,
@@ -385,7 +372,7 @@ class _StoryPresenterState extends State<StoryPresenter>
                   },
                   storyItem: item,
                   onLoaded: () {
-                    _startStoryCountdown();
+                    _startStoryCountdown(item.duration);
                   },
                 );
             }
