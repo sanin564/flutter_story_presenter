@@ -356,7 +356,13 @@ class _StoryPresenterState extends State<StoryPresenter>
             _startStoryCountdown(videoPlayer.value.duration);
           },
           onVisibilityChanged: (videoPlayer, isvisible) {
-            _currentVideoPlayer = videoPlayer;
+            if (isvisible) {
+              _currentVideoPlayer = videoPlayer;
+              videoPlayer?.play();
+            } else {
+              _currentVideoPlayer = null;
+              videoPlayer?.pause();
+            }
           },
         );
 

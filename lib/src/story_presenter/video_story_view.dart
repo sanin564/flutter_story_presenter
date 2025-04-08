@@ -112,6 +112,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
     if (videoStatus.isLive) {
       controller?.removeListener(videoListener);
       controller?.dispose();
+      controller = null;
     }
 
     super.dispose();
@@ -125,7 +126,7 @@ class _VideoStoryViewState extends State<VideoStoryView> {
         if (info.visibleFraction == 1) {
           widget.onVisibilityChanged?.call(controller, true);
         } else if (info.visibleFraction == 0) {
-          widget.onVisibilityChanged?.call(null, false);
+          widget.onVisibilityChanged?.call(controller, false);
         }
       },
       child: Stack(
