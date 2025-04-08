@@ -299,7 +299,6 @@ class _StoryPresenterState extends State<StoryPresenter>
 
   @override
   Widget build(BuildContext context) {
-    final mdSize = MediaQuery.sizeOf(context);
     return PageView.builder(
       controller: pageController,
       allowImplicitScrolling: true,
@@ -314,66 +313,7 @@ class _StoryPresenterState extends State<StoryPresenter>
           children: [
             _buildContent(context, index, item),
             _buildProgressBar(context, index, item),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                width: mdSize.width * .2,
-                height: mdSize.height,
-                child: GestureDetector(
-                  onTap: () async {
-                    final willUserHandle =
-                        await widget.onLeftTap?.call() ?? false;
-                    if (!willUserHandle) _storyController.previous();
-                  },
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(
-                width: mdSize.width * .8,
-                height: mdSize.height,
-                child: GestureDetector(
-                  onTap: () async {
-                    final willUserHandle =
-                        await widget.onRightTap?.call() ?? false;
-                    if (!willUserHandle) _storyController.next();
-                  },
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(
-                width: mdSize.width,
-                height: mdSize.height,
-                child: GestureDetector(
-                  key: UniqueKey(),
-                  onLongPressDown: (details) async {
-                    final willUserHandle =
-                        await widget.onPause?.call() ?? false;
-                    if (!willUserHandle) _storyController.pause();
-                  },
-                  onLongPressUp: () async {
-                    final willUserHandle =
-                        await widget.onResume?.call() ?? false;
-                    if (!willUserHandle) _storyController.play();
-                  },
-                  onLongPressEnd: (details) async {
-                    final willUserHandle =
-                        await widget.onResume?.call() ?? false;
-                    if (!willUserHandle) _storyController.play();
-                  },
-                  onLongPressCancel: () async {
-                    final willUserHandle =
-                        await widget.onResume?.call() ?? false;
-                    if (!willUserHandle) _storyController.play();
-                  },
-                  onVerticalDragStart: widget.onSlideStart?.call,
-                  onVerticalDragUpdate: widget.onSlideDown?.call,
-                ),
-              ),
-            ),
+            ..._buildGestures(context, index, item),
             if (widget.headerWidget != null) ...{
               Align(
                 alignment: Alignment.topCenter,
@@ -507,5 +447,66 @@ class _StoryPresenterState extends State<StoryPresenter>
     );
 
     return widget.indicatorWrapper?.call(child) ?? child;
+  }
+
+  List<Widget> _buildGestures(BuildContext context, int index, StoryItem item) {
+    final mdSize = MediaQuery.sizeOf(context);
+
+    return [
+      Align(
+        alignment: Alignment.centerLeft,
+        child: SizedBox(
+          width: mdSize.width * .2,
+          height: mdSize.height,
+          child: GestureDetector(
+            onTap: () async {
+              final willUserHandle = await widget.onLeftTap?.call() ?? false;
+              if (!willUserHandle) _storyController.previous();
+            },
+          ),
+        ),
+      ),
+      Align(
+        alignment: Alignment.centerRight,
+        child: SizedBox(
+          width: mdSize.width * .8,
+          height: mdSize.height,
+          child: GestureDetector(
+            onTap: () async {
+              final willUserHandle = await widget.onRightTap?.call() ?? false;
+              if (!willUserHandle) _storyController.next();
+            },
+          ),
+        ),
+      ),
+      Align(
+        alignment: Alignment.centerRight,
+        child: SizedBox(
+          width: mdSize.width,
+          height: mdSize.height,
+          child: GestureDetector(
+            key: UniqueKey(),
+            onLongPressDown: (details) async {
+              final willUserHandle = await widget.onPause?.call() ?? false;
+              if (!willUserHandle) _storyController.pause();
+            },
+            onLongPressUp: () async {
+              final willUserHandle = await widget.onResume?.call() ?? false;
+              if (!willUserHandle) _storyController.play();
+            },
+            onLongPressEnd: (details) async {
+              final willUserHandle = await widget.onResume?.call() ?? false;
+              if (!willUserHandle) _storyController.play();
+            },
+            onLongPressCancel: () async {
+              final willUserHandle = await widget.onResume?.call() ?? false;
+              if (!willUserHandle) _storyController.play();
+            },
+            onVerticalDragStart: widget.onSlideStart?.call,
+            onVerticalDragUpdate: widget.onSlideDown?.call,
+          ),
+        ),
+      ),
+    ];
   }
 }
