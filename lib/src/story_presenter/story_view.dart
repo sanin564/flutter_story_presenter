@@ -27,6 +27,7 @@ typedef OnSlideStart = void Function(DragStartDetails);
 typedef OnPause = Future<bool> Function();
 typedef OnResume = Future<bool> Function();
 typedef IndicatorWrapper = Widget Function(Widget child);
+typedef CommonBuilder = Widget Function(BuildContext context, int index);
 
 final durationNotifier = ValueNotifier(const Duration(seconds: 5));
 
@@ -41,8 +42,8 @@ class StoryPresenter extends StatefulWidget {
     this.onPreviousCompleted,
     this.storyViewIndicatorConfig,
     this.onVideoLoad,
-    this.headerWidget,
-    this.footerWidget,
+    this.headerBuilder,
+    this.footerBuilder,
     this.onSlideDown,
     this.onSlideStart,
     this.onPause,
@@ -91,10 +92,10 @@ class StoryPresenter extends StatefulWidget {
   final OnVideoLoad? onVideoLoad;
 
   /// Widget to display user profile or other details at the top of the screen.
-  final Widget? headerWidget;
+  final CommonBuilder? headerBuilder;
 
   /// Widget to display text field or other content at the bottom of the screen.
-  final Widget? footerWidget;
+  final CommonBuilder? footerBuilder;
 
   /// called when status is paused by user, typically when user tap and holds
   /// on the screen.
@@ -308,20 +309,20 @@ class _StoryPresenterState extends State<StoryPresenter>
             _buildContent(context, index, item),
             _buildProgressBar(context, index, item),
             ..._buildGestures(context, index, item),
-            if (widget.headerWidget != null) ...{
+            if (widget.headerBuilder != null) ...{
               Align(
                 alignment: Alignment.topCenter,
                 child: SafeArea(
                   bottom: storyViewIndicatorConfig.enableBottomSafeArea,
                   top: storyViewIndicatorConfig.enableTopSafeArea,
-                  child: widget.headerWidget!,
+                  child: widget.headerBuilder!(context, index),
                 ),
               ),
             },
-            if (widget.footerWidget != null) ...{
+            if (widget.footerBuilder != null) ...{
               Align(
                 alignment: Alignment.bottomCenter,
-                child: widget.footerWidget!,
+                child: widget.footerBuilder!(context, index),
               ),
             },
           ],

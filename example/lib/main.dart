@@ -245,7 +245,9 @@ class _MyStoryViewState extends State<MyStoryView> {
       storyController: controller,
       items: widget.storyModel.stories,
       storyViewIndicatorConfig: storyViewIndicatorConfig,
-      headerWidget: ProfileView(storyModel: widget.storyModel),
+      headerBuilder: (context, index) {
+        return ProfileView(storyModel: widget.storyModel);
+      },
       onLeftTap: () async {
         /// do some work here
         return false;
