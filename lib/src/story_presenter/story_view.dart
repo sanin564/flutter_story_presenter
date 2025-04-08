@@ -203,8 +203,6 @@ class _StoryPresenterState extends State<StoryPresenter>
 
     /// Plays the next story item.
     void playNext() async {
-      _resetAnimation();
-
       if (_storyController.page == widget.items.length - 1) {
         await widget.onCompleted?.call();
         return;
@@ -212,22 +210,16 @@ class _StoryPresenterState extends State<StoryPresenter>
         _storyController.page += 1;
         pageController.jumpToPage(_storyController.page);
       }
-
-      _animationController.forward();
     }
 
     /// Plays the previous story item.
     void playPrevious() {
-      _resetAnimation();
-
       if (_storyController.page == 0) {
         widget.onPreviousCompleted?.call();
       } else {
         _storyController.page -= 1;
         pageController.jumpToPage(_storyController.page);
       }
-
-      _animationController.forward();
     }
 
     /// Toggles mute/unmute for the media.
@@ -278,7 +270,6 @@ class _StoryPresenterState extends State<StoryPresenter>
   void _startStoryCountdown(Duration duration) {
     _animationController.duration = duration;
     _animationController.addStatusListener(animationStatusListener);
-
     _animationController.forward();
   }
 
@@ -295,7 +286,10 @@ class _StoryPresenterState extends State<StoryPresenter>
       controller: pageController,
       allowImplicitScrolling: true,
       physics: const NeverScrollableScrollPhysics(),
-      onPageChanged: widget.onStoryChanged,
+      onPageChanged: (index) {
+        _resetAnimation();
+        widget.onStoryChanged?.call(index);
+      },
       itemCount: widget.items.length,
       itemBuilder: (context, index) {
         final item = widget.items[index];
@@ -347,16 +341,17 @@ class _StoryPresenterState extends State<StoryPresenter>
           key: UniqueKey(),
           looping: false,
           onVisibilityChanged: (videoPlayer, isvisible) {
-            if (isvisible) {
+            if (isvisible && videoPlayer != null) {
               _currentVideoNotifier.value = videoPlayer;
-              videoPlayer?.play();
+              videoPlayer.play();
+
+              _startStoryCountdown(videoPlayer.value.duration);
             } else {
               _currentVideoNotifier.value = null;
               videoPlayer?.pause();
               videoPlayer?.seekTo(Duration.zero);
             }
           },
-          onEnd: _storyController.next,
         );
 
       case StoryItemType.text:
@@ -394,8 +389,10 @@ class _StoryPresenterState extends State<StoryPresenter>
                 const SizedBox.shrink();
           },
           storyItem: item,
-          onLoaded: () {
-            _startStoryCountdown(item.duration);
+          onVisibilityChanged: (isVisible) {
+            if (isVisible) {
+              _startStoryCountdown(item.duration);
+            }
           },
         );
     }
