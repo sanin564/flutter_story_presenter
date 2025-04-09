@@ -361,16 +361,16 @@ class _StoryPresenterState extends State<StoryPresenter>
           storyItem: item,
           key: UniqueKey(),
           looping: false,
-          onVisibilityChanged: (videoPlayer, isvisible) {
+          onVisibilityChanged: (videoPlayer, isvisible) async {
             if (isvisible && videoPlayer?.value.isInitialized == true) {
               _currentVideoPlayer = videoPlayer;
-              videoPlayer!.play();
 
-              _startStoryCountdown(videoPlayer.value.duration);
+              if (_storyController.storyStatus != StoryAction.pause) {
+                await videoPlayer!.play();
+                _startStoryCountdown(videoPlayer.value.duration);
+              }
             } else {
               _currentVideoPlayer = null;
-              videoPlayer?.pause();
-              videoPlayer?.seekTo(Duration.zero);
             }
           },
         );

@@ -97,6 +97,16 @@ class _HomeState extends State<Home> {
               "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800",
         ),
         StoryItem(
+          storyItemType: StoryItemType.image,
+          url:
+              "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800",
+        ),
+        StoryItem(
+          storyItemType: StoryItemType.image,
+          url:
+              "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800",
+        ),
+        StoryItem(
             storyItemType: StoryItemType.video,
             url:
                 'https://videos.pexels.com/video-files/5913245/5913245-uhd_1440_2560_30fps.mp4',
@@ -189,7 +199,6 @@ class _HomeState extends State<Home> {
       backgroundColor: Colors.black,
       body: PageView.builder(
         itemCount: sampleStory.length,
-        // physics: const NeverScrollableScrollPhysics(),
         controller: pageController,
         itemBuilder: (context, index) {
           return AnimatedBuilder(
