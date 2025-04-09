@@ -92,6 +92,50 @@ class _HomeState extends State<Home> {
           ),
         ),
         StoryItem(
+          storyItemType: StoryItemType.video,
+          storyItemSource: StoryItemSource.asset,
+          url: 'assets/fb8512a35d6f4b2e8917b74a048de71a.MP4',
+          videoConfig: const StoryViewVideoConfig(
+            fit: BoxFit.cover,
+            loadingWidget: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CupertinoActivityIndicator(
+                    radius: 15,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text('Video Loading')
+                ],
+              ),
+            ),
+          ),
+        ),
+        StoryItem(
+          storyItemType: StoryItemType.video,
+          storyItemSource: StoryItemSource.asset,
+          url: 'assets/fb8512a35d6f4b2e8917b74a048de71a.MP4',
+          videoConfig: const StoryViewVideoConfig(
+            fit: BoxFit.cover,
+            loadingWidget: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CupertinoActivityIndicator(
+                    radius: 15,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text('Video Loading')
+                ],
+              ),
+            ),
+          ),
+        ),
+        StoryItem(
           storyItemType: StoryItemType.image,
           url:
               "https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800",

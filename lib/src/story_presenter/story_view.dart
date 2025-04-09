@@ -14,6 +14,20 @@ import '../story_presenter/text_story_view.dart';
 import '../utils/story_utils.dart';
 import 'package:video_player/video_player.dart';
 
+//! //! ***** NOTE ***** //! //!
+/// currently visibility detector is used to do major operations like
+/// playing, pausing, starting animation,resetting animation.
+/// but this is not reliable because visibility detector is taking some time
+/// to check if the widget is visible or not, for this sole reason, we've to
+/// write a lot of boilerplate code and extra logic to handle the delay.
+///
+/// one alternative solution is write logic by utilizing [page] property
+/// inside [pageController]. i believe this can solve this issue, it can be time
+/// consuming for researching the possibility. so if someone else gets time,
+/// please work on this alternative or find some other alternatives.
+///
+/// Thank You!
+
 typedef OnStoryChanged = void Function(int);
 typedef OnCompleted = Future<void> Function();
 typedef OnLeftTap = Future<bool> Function();
@@ -312,6 +326,7 @@ class _StoryPresenterState extends State<StoryPresenter>
         _currentVideoPlayer?.pause();
         _currentVideoPlayer?.seekTo(Duration.zero);
         _currentVideoPlayer = null;
+
         widget.onStoryChanged?.call(index);
       },
       itemCount: widget.itemCount,
@@ -365,12 +380,17 @@ class _StoryPresenterState extends State<StoryPresenter>
           key: UniqueKey(),
           looping: false,
           onVisibilityChanged: (videoPlayer, isvisible) async {
-            if (isvisible && videoPlayer?.value.isInitialized == true) {
-              _currentVideoPlayer = videoPlayer;
-
-              if (_storyController.storyStatus != StoryAction.pause) {
-                await videoPlayer!.play();
-                _startStoryCountdown(videoPlayer.value.duration);
+            if (videoPlayer?.value.isInitialized == true) {
+              if (isvisible) {
+                _currentVideoPlayer = videoPlayer;
+                if (_storyController.storyStatus != StoryAction.pause) {
+                  await videoPlayer!.play();
+                  _startStoryCountdown(videoPlayer.value.duration);
+                }
+              } else {
+                _currentVideoPlayer = null;
+                videoPlayer?.pause();
+                videoPlayer?.seekTo(Duration.zero);
               }
             } else {
               _currentVideoPlayer = null;
