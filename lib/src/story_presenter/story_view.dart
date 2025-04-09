@@ -146,7 +146,10 @@ class _StoryPresenterState extends State<StoryPresenter>
       vsync: this,
     );
 
-    pageController = PageController(initialPage: _storyController.page);
+    pageController = PageController(
+      initialPage: _storyController.page,
+      keepPage: false,
+    );
 
     widget.onStoryChanged?.call(_storyController.page);
 

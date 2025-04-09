@@ -168,6 +168,29 @@ class _HomeState extends State<Home> {
               )),
           url: "Happy Independence Day",
         ),
+        StoryItem(
+          storyItemType: StoryItemType.video,
+          storyItemSource: StoryItemSource.network,
+          url:
+              'https://videocdn.cdnpk.net/joy/content/video/free/2014-12/large_preview/Raindrops_Videvo.mp4?token=exp=1744129744~acl=/*~hmac=aceef1c035c412a40324f70c5a65183f8fe0ef1823e1f9d3c3fadeb6f690fa00',
+          videoConfig: const StoryViewVideoConfig(
+            fit: BoxFit.contain,
+            loadingWidget: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CupertinoActivityIndicator(
+                    radius: 15,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text('Video Loading')
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     ),
     StoryModel(
