@@ -14,6 +14,20 @@ import '../story_presenter/text_story_view.dart';
 import '../utils/story_utils.dart';
 import 'package:video_player/video_player.dart';
 
+//! //! ***** NOTE ***** //! //!
+/// currently visibility detector is used to do major operations like
+/// playing, pausing, starting animation,resetting animation.
+/// but this is not reliable because visibility detector is taking some time
+/// to check if the widget is visible or not, for this sole reason, we've to
+/// write a lot of boilerplate code and extra logic to handle the delay.
+///
+/// one alternative solution is write logic by utilizing [page] property
+/// inside [pageController]. i believe this can solve this issue, it can be time
+/// consuming for researching the possibility. so if someone else gets time,
+/// please work on this alternative or find some other alternatives.
+///
+/// Thank You!
+
 typedef OnStoryChanged = void Function(int);
 typedef OnCompleted = Future<void> Function();
 typedef OnLeftTap = Future<bool> Function();
