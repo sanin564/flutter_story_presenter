@@ -312,6 +312,7 @@ class _StoryPresenterState extends State<StoryPresenter>
         _currentVideoPlayer?.pause();
         _currentVideoPlayer?.seekTo(Duration.zero);
         _currentVideoPlayer = null;
+
         widget.onStoryChanged?.call(index);
       },
       itemCount: widget.itemCount,
@@ -365,12 +366,17 @@ class _StoryPresenterState extends State<StoryPresenter>
           key: UniqueKey(),
           looping: false,
           onVisibilityChanged: (videoPlayer, isvisible) async {
-            if (isvisible && videoPlayer?.value.isInitialized == true) {
-              _currentVideoPlayer = videoPlayer;
-
-              if (_storyController.storyStatus != StoryAction.pause) {
-                await videoPlayer!.play();
-                _startStoryCountdown(videoPlayer.value.duration);
+            if (videoPlayer?.value.isInitialized == true) {
+              if (isvisible) {
+                _currentVideoPlayer = videoPlayer;
+                if (_storyController.storyStatus != StoryAction.pause) {
+                  await videoPlayer!.play();
+                  _startStoryCountdown(videoPlayer.value.duration);
+                }
+              } else {
+                _currentVideoPlayer = null;
+                videoPlayer?.pause();
+                videoPlayer?.seekTo(Duration.zero);
               }
             } else {
               _currentVideoPlayer = null;
