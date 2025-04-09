@@ -369,8 +369,6 @@ class _StoryPresenterState extends State<StoryPresenter>
               _startStoryCountdown(videoPlayer.value.duration);
             } else {
               _currentVideoPlayer = null;
-              videoPlayer?.pause();
-              videoPlayer?.seekTo(Duration.zero);
             }
           },
         );
