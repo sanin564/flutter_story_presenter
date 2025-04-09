@@ -51,6 +51,8 @@ class StoryPresenter extends StatefulWidget {
     this.onPause,
     this.onResume,
     this.indicatorWrapper,
+    this.onLongPress,
+    this.onLongPressRelease,
     super.key,
   });
 
@@ -117,6 +119,10 @@ class StoryPresenter extends StatefulWidget {
   final OnResume? onResume;
 
   final IndicatorWrapper? indicatorWrapper;
+
+  final VoidCallback? onLongPress;
+
+  final VoidCallback? onLongPressRelease;
 
   @override
   State<StoryPresenter> createState() => _StoryPresenterState();
@@ -476,15 +482,14 @@ class _StoryPresenterState extends State<StoryPresenter>
           height: mdSize.height,
           child: GestureDetector(
             key: UniqueKey(),
+            onLongPress: widget.onLongPress,
+            onLongPressMoveUpdate: (_) => widget.onLongPressRelease?.call(),
             onLongPressDown: (details) async {
               final willUserHandle = await widget.onPause?.call() ?? false;
               if (!willUserHandle) _storyController.pause();
             },
             onLongPressUp: () async {
-              final willUserHandle = await widget.onResume?.call() ?? false;
-              if (!willUserHandle) _storyController.play();
-            },
-            onLongPressEnd: (details) async {
+              widget.onLongPressRelease?.call();
               final willUserHandle = await widget.onResume?.call() ?? false;
               if (!willUserHandle) _storyController.play();
             },
