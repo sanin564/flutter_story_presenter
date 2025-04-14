@@ -336,9 +336,8 @@ class _StoryPresenterState extends State<StoryPresenter>
         return Stack(
           fit: StackFit.expand,
           children: [
-            _buildContent(context, index, item),
+            _buildGestureAndContents(context, index, item),
             _buildProgressBar(context, index, item),
-            ..._buildGestures(context, index, item),
             if (widget.headerBuilder != null) ...{
               Align(
                 alignment: Alignment.topCenter,
@@ -468,63 +467,43 @@ class _StoryPresenterState extends State<StoryPresenter>
     return widget.indicatorWrapper?.call(child) ?? child;
   }
 
-  List<Widget> _buildGestures(BuildContext context, int index, StoryItem item) {
-    final mdSize = MediaQuery.sizeOf(context);
+  Widget _buildGestureAndContents(
+      BuildContext context, int index, StoryItem item) {
+    final width = MediaQuery.sizeOf(context).width;
 
-    return [
-      Align(
-        alignment: Alignment.centerLeft,
-        child: SizedBox(
-          width: mdSize.width * .2,
-          height: mdSize.height,
-          child: GestureDetector(
-            onTap: () async {
-              final willUserHandle = await widget.onLeftTap?.call() ?? false;
-              if (!willUserHandle) _storyController.previous();
-            },
-          ),
-        ),
-      ),
-      Align(
-        alignment: Alignment.centerRight,
-        child: SizedBox(
-          width: mdSize.width * .8,
-          height: mdSize.height,
-          child: GestureDetector(
-            onTap: () async {
-              final willUserHandle = await widget.onRightTap?.call() ?? false;
-              if (!willUserHandle) _storyController.next();
-            },
-          ),
-        ),
-      ),
-      Align(
-        alignment: Alignment.centerRight,
-        child: SizedBox(
-          width: mdSize.width,
-          height: mdSize.height,
-          child: GestureDetector(
-            key: UniqueKey(),
-            onLongPress: widget.onLongPress,
-            onLongPressMoveUpdate: (_) => widget.onLongPressRelease?.call(),
-            onLongPressDown: (details) async {
-              final willUserHandle = await widget.onPause?.call() ?? false;
-              if (!willUserHandle) _storyController.pause();
-            },
-            onLongPressUp: () async {
-              widget.onLongPressRelease?.call();
-              final willUserHandle = await widget.onResume?.call() ?? false;
-              if (!willUserHandle) _storyController.play();
-            },
-            onLongPressCancel: () async {
-              final willUserHandle = await widget.onResume?.call() ?? false;
-              if (!willUserHandle) _storyController.play();
-            },
-            onVerticalDragStart: widget.onSlideStart?.call,
-            onVerticalDragUpdate: widget.onSlideDown?.call,
-          ),
-        ),
-      ),
-    ];
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTapUp: (details) async {
+        final isNext = details.globalPosition.dx > (width * 0.2);
+
+        if (isNext) {
+          final willUserHandle = await widget.onRightTap?.call() ?? false;
+          if (!willUserHandle) _storyController.next();
+        } else {
+          final willUserHandle = await widget.onLeftTap?.call() ?? false;
+          if (!willUserHandle) _storyController.previous();
+        }
+      },
+      onLongPress: widget.onLongPress,
+      onLongPressMoveUpdate: (_) => widget.onLongPressRelease?.call(),
+      onLongPressDown: (details) async {
+        final willUserHandle = await widget.onPause?.call() ?? false;
+        if (!willUserHandle) _storyController.pause();
+      },
+      onLongPressUp: () async {
+        widget.onLongPressRelease?.call();
+        final willUserHandle = await widget.onResume?.call() ?? false;
+        if (!willUserHandle) _storyController.play();
+      },
+      onLongPressCancel: () async {
+        final willUserHandle = await widget.onResume?.call() ?? false;
+        if (!willUserHandle) _storyController.play();
+      },
+      onVerticalDragStart: widget.onSlideStart?.call,
+      onVerticalDragUpdate: widget.onSlideDown?.call,
+
+      //! content goes here
+      child: _buildContent(context, index, item),
+    );
   }
 }
