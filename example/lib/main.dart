@@ -246,9 +246,20 @@ class _HomeState extends State<Home> {
           url: 'Hello World',
         ),
         StoryItem(
-          storyItemType: StoryItemType.text,
-          url: 'How Are you Guyzz doingg?',
-        )
+            storyItemType: StoryItemType.text,
+            url: 'How Are you Guyzz doingg?',
+            textConfig: StoryViewTextConfig(
+                textWidget: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {},
+              child: const Text(
+                "HelloHowAreYouDoing",
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            )))
       ],
     ),
   ];
