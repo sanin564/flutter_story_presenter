@@ -27,12 +27,13 @@ class ImageStoryView extends StatefulWidget {
 class _ImageStoryViewState extends State<ImageStoryView> {
   /// A flag to ensure the [widget.onImageLoaded] callback is called only once.
   bool _isImageLoaded = false;
+  bool _isVisible = false;
 
   /// Marks the image as loaded and calls the [widget.onImageLoaded] callback if it hasn't been called already.
   void markImageAsLoaded() {
     if (!_isImageLoaded) {
       _isImageLoaded = true;
-      widget.onVisibilityChanged?.call(false, true);
+      widget.onVisibilityChanged?.call(_isVisible, _isImageLoaded);
     }
   }
 
@@ -129,8 +130,10 @@ class _ImageStoryViewState extends State<ImageStoryView> {
       key: UniqueKey(),
       onVisibilityChanged: (info) {
         if (info.visibleFraction == 0) {
+          _isVisible = false;
           widget.onVisibilityChanged?.call(false, _isImageLoaded);
         } else if (info.visibleFraction == 1) {
+          _isVisible = true;
           widget.onVisibilityChanged?.call(true, _isImageLoaded);
         }
       },
