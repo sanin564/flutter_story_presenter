@@ -33,7 +33,12 @@ class _ImageStoryViewState extends State<ImageStoryView> {
   void markImageAsLoaded() {
     if (!_isImageLoaded) {
       _isImageLoaded = true;
-      widget.onVisibilityChanged?.call(_isVisible, _isImageLoaded);
+      Future.delayed(
+        Duration.zero,
+        () {
+          widget.onVisibilityChanged?.call(_isVisible, _isImageLoaded);
+        },
+      );
     }
   }
 
